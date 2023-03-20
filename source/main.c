@@ -26,10 +26,12 @@ paddle_t left_paddle = {.height = PADDLE_HEIGHT, .width = PADDLE_WIDTH};
 paddle_t right_paddle = {.height = PADDLE_HEIGHT, .width = PADDLE_WIDTH};
 ball_t ball = {.size = BALL_SIZE};
 
+// input booleans
 bool left_paddle_up = 0;
 bool left_paddle_down = 0;
 bool right_paddle_up = 0;
 bool right_paddle_down = 0;
+
 
 size_t score_left_player = 0;
 size_t score_right_player = 0;
@@ -54,7 +56,7 @@ void on_window_resize()
     window_width_units = window_width_px / unit;
     window_height_units = window_height_px / unit;
 
-    printf("Fensterdimensionen: %dx%d Pixel\n", window_height_px, window_width_px);
+    // printf("Fensterdimensionen: %dx%d Pixel\n", window_height_px, window_width_px);
 }
 
 void set_ball_direction(float angle)
@@ -137,12 +139,16 @@ void handle_events()
 
 void update()
 {
-    static Uint32 last_frame = 0U;
+    static Uint32 last_frame = 0;
 
-    if (SDL_GetTicks64() - last_frame < MIN_FRAME_DURATION)
+    float delta_time = SDL_GetTicks64() - last_frame;
+
+    if (delta_time < MIN_FRAME_DURATION)
         SDL_Delay((last_frame + MIN_FRAME_DURATION) - SDL_GetTicks64());
+    else if (delta_time > MAX_FRAME_DURATION)
+        delta_time = MAX_FRAME_DURATION;
 
-    float frame_duration_s = (float)(SDL_GetTicks64() - last_frame) / 1000.0; // Wie lange dauert ein Frame
+    float frame_duration_s = delta_time / 1000.0; // Wie lange dauert ein Frame
     last_frame = SDL_GetTicks64();
 
     // Ball
@@ -282,6 +288,20 @@ void render()
     SDL_RenderPresent(renderer);
 }
 
+void wait_for_keypress(int scancode)
+{
+    SDL_Event ev;
+    while(1)
+    {
+        SDL_WaitEvent(&ev);
+        if (ev.type == SDL_KEYDOWN)
+        {
+            if (ev.key.keysym.scancode == scancode)
+                return;
+        }
+        SDL_Delay(MIN_FRAME_DURATION);
+    }
+}
 
 void game_setup()
 {
@@ -294,8 +314,8 @@ void game_setup()
     ball.x = (window_width_units - ball.size) / 2;
     ball.y = (window_height_units - ball.size) / 2;
 
-    // Startrichtung des Balls setzen
-    set_ball_direction(3);
+    // Startrichtung des Balls setzen (gerade nach links)
+    set_ball_direction(PI);
 
     score_left_player = 0;
     score_right_player = 0;
@@ -318,7 +338,7 @@ int main()
     while(match_is_ongoing)
     {
         game_setup();
-        SDL_WaitEvent(NULL);
+        wait_for_keypress(SDL_SCANCODE_SPACE);
         // Innere Game Loop
         while (game_is_ongoing)
         {

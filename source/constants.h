@@ -8,6 +8,7 @@
 
 #define MAX_FPS 120
 #define MIN_FRAME_DURATION (1000.0f / MAX_FPS)
+#define MAX_FRAME_DURATION 100
 
 
 // Grössen in Längeneinheiten (units)
@@ -16,7 +17,7 @@
 #define PADDLE_OFFSET 2
 #define BALL_SIZE 1
 #define BALL_VELOCITY_FACTOR 40 // Einheiten pro Sekunde
-#define PADDLE_VELOCITY 30
+#define PADDLE_VELOCITY 40
 
 // Mathe
 #define PI 3.14159f
