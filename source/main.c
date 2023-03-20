@@ -17,7 +17,7 @@ int window_width_px = INITIAL_WINDOW_WIDTH;
 int window_height_px = INITIAL_WINDOW_HEIGHT;
 
 
-float unit = (INITIAL_WINDOW_WIDTH / 50); // Längeneinheit in Pixeln
+float unit = (INITIAL_WINDOW_WIDTH / 50.0); // Längeneinheit in Pixeln
 
 float window_width_units = 50.0;
 float window_height_units = INITIAL_WINDOW_HEIGHT * 50.0 / INITIAL_WINDOW_WIDTH;
@@ -197,14 +197,40 @@ void update()
     // Ball mit linkem Paddle
     if ((ball.y + ball.size > left_paddle.y && ball.y < left_paddle.y + left_paddle.height) && (ball.x <= left_paddle.x + left_paddle.width && ball.x >= left_paddle.x + left_paddle.width- tolerance))
     {
+        /*
         ball.velocity_x *= -1;
         ball.x = left_paddle.x + left_paddle.width;
+        */
+
+       // Der Ball soll abhängig davon, wie weit er von der Mitte entfernt ist, einen anderen Abprallwinkel haben
+       float paddle_center_y = left_paddle.y + (left_paddle.height / 2.0);
+       float ball_center_y = ball.y + (ball.size / 2.0);
+       float offset = ball_center_y - paddle_center_y;
+       float bounce_off_factor = offset / (left_paddle.height / 2.0);
+       if (bounce_off_factor > 1)
+        bounce_off_factor = 1;
+       float bounce_off_angle = bounce_off_factor * MAX_BOUNCE_OFF_ANGLE;
+       set_ball_direction(bounce_off_angle);
+
+
     }
     // Ball mit rechtem Paddle
     else if ((ball.y + ball.size > right_paddle.y && ball.y < right_paddle.y + right_paddle.height) && (ball.x + ball.size >= right_paddle.x && ball.x + ball.size <= right_paddle.x + tolerance))
     {
+        /*
         ball.velocity_x *= -1;
         ball.x = right_paddle.x - ball.size;
+        */
+
+       float paddle_center_y = right_paddle.y + (right_paddle.height / 2.0);
+       float ball_center_y = ball.y + (ball.size / 2.0);
+       float offset = ball_center_y - paddle_center_y;
+       float bounce_off_factor = offset / (right_paddle.height / 2.0);
+       if (bounce_off_factor > 1)
+        bounce_off_factor = 1;
+       float bounce_off_angle = PI - (bounce_off_factor * MAX_BOUNCE_OFF_ANGLE);
+       set_ball_direction(bounce_off_angle);
+
     }
 
 

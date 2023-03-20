@@ -3,8 +3,8 @@
 
 
 // Umgebung
-#define INITIAL_WINDOW_WIDTH 1920
-#define INITIAL_WINDOW_HEIGHT 1080
+#define INITIAL_WINDOW_WIDTH 1200
+#define INITIAL_WINDOW_HEIGHT 800
 
 #define MAX_FPS 120
 #define MIN_FRAME_DURATION (1000.0f / MAX_FPS)
@@ -17,6 +17,10 @@
 #define BALL_SIZE 1
 #define BALL_VELOCITY_FACTOR 40 // Einheiten pro Sekunde
 #define PADDLE_VELOCITY 30
+
+// Mathe
+#define PI 3.14159f
+#define MAX_BOUNCE_OFF_ANGLE (PI / 4.0f) // 45°
 
 
 
