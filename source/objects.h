@@ -4,6 +4,13 @@
 #include <stdint.h>
 #include <SDL2/SDL.h>
 
+typedef struct score_t
+{
+    size_t count;
+    size_t length;
+    char string[10];
+
+} score_t;
 
 // Paddle / "Schläger"
 typedef struct paddle_t
@@ -12,8 +19,11 @@ typedef struct paddle_t
     size_t width;
     float x;
     float y;
+    score_t score;
+
 
 } paddle_t;
+
 
 
 void render_paddle(paddle_t* paddle, SDL_Renderer* renderer, float unit)

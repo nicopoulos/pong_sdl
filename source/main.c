@@ -1,8 +1,13 @@
 #include <stdio.h>
 
-#include <SDL2/SDL.h>
+
+
 #include <stdbool.h>
 #include <math.h>
+
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include "constants.h"
 #include "objects.h"
@@ -11,6 +16,9 @@
 // Globale Variabeln & Objekte
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
+TTF_Font* score_font = NULL;
+
+SDL_Surface* temp = NULL;
 
 
 int window_width_px = INITIAL_WINDOW_WIDTH;
@@ -22,8 +30,8 @@ float unit = (INITIAL_WINDOW_WIDTH / 50.0); // Längeneinheit in Pixeln
 float window_width_units = 50.0;
 float window_height_units = INITIAL_WINDOW_HEIGHT * 50.0 / INITIAL_WINDOW_WIDTH;
 
-paddle_t left_paddle = {.height = PADDLE_HEIGHT, .width = PADDLE_WIDTH};
-paddle_t right_paddle = {.height = PADDLE_HEIGHT, .width = PADDLE_WIDTH};
+paddle_t left_paddle = {.height = PADDLE_HEIGHT, .width = PADDLE_WIDTH, .score = {.count = 0, .length = 1, .string = "0"}};
+paddle_t right_paddle = {.height = PADDLE_HEIGHT, .width = PADDLE_WIDTH, .score = {.count = 0, .length = 1, .string = "0"}};
 ball_t ball = {.size = BALL_SIZE};
 
 // input booleans
@@ -32,9 +40,9 @@ bool left_paddle_down = 0;
 bool right_paddle_up = 0;
 bool right_paddle_down = 0;
 
+bool ball_served = 0;
 
-size_t score_left_player = 0;
-size_t score_right_player = 0;
+
 
 bool match_is_ongoing = true;
 bool game_is_ongoing = true;
@@ -92,16 +100,23 @@ void handle_events()
                 switch(event.key.keysym.scancode)
                 {
                     case SDL_SCANCODE_W:
+                    {
                         left_paddle_up = true;
                         break;
+                    }
                     case SDL_SCANCODE_S:
-                        left_paddle_down = true;                    
+                    {
+                        left_paddle_down = true;
                         break;
+                    }
                     case SDL_SCANCODE_UP:
                         right_paddle_up = true;
                         break;
                     case SDL_SCANCODE_DOWN:
                         right_paddle_down = true;
+                        break;
+                    case SDL_SCANCODE_SPACE:
+                        ball_served = true;
                         break;
 
                     default:
@@ -113,11 +128,15 @@ void handle_events()
                 switch(event.key.keysym.scancode)
                 {
                     case SDL_SCANCODE_W:
+                    {
                         left_paddle_up = false;
                         break;
+                    }
                     case SDL_SCANCODE_S:
-                        left_paddle_down = false;                    
+                    {
+                        left_paddle_down = false;
                         break;
+                    }
                     case SDL_SCANCODE_UP:
                         right_paddle_up = false;
                         break;
@@ -134,6 +153,92 @@ void handle_events()
                 break;
         }
 
+    }
+}
+
+void handle_events_before_service()
+{
+    SDL_Event event;
+    while(1)
+    {
+        SDL_WaitEvent(&event);
+
+        switch(event.type)
+        {
+            case SDL_QUIT:
+                quit();
+                break;
+
+            case SDL_WINDOWEVENT:
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    on_window_resize();
+                break;
+
+            case SDL_KEYDOWN:
+                if (event.key.keysym.sym == SDLK_ESCAPE)
+                {
+                    quit();
+                    break;
+                }
+
+                switch(event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_W:
+                    {
+                        left_paddle_up = true;
+                        break;
+                    }
+                    case SDL_SCANCODE_S:
+                    {
+                        left_paddle_down = true;
+                        break;
+                    }
+                    case SDL_SCANCODE_UP:
+                        right_paddle_up = true;
+                        break;
+                    case SDL_SCANCODE_DOWN:
+                        right_paddle_down = true;
+                        break;
+                    case SDL_SCANCODE_SPACE:
+                        ball_served = true;
+                        break;
+
+                    default:
+                        break;
+
+                }
+                break;
+            case SDL_KEYUP:
+                switch(event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_W:
+                    {
+                        left_paddle_up = false;
+                        break;
+                    }
+                    case SDL_SCANCODE_S:
+                    {
+                        left_paddle_down = false;
+                        break;
+                    }
+                    case SDL_SCANCODE_UP:
+                        right_paddle_up = false;
+                        break;
+                    case SDL_SCANCODE_DOWN:
+                        right_paddle_down = false;
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            default:
+                break;
+        }
+
+
+        SDL_Delay(MIN_FRAME_DURATION);
     }
 }
 
@@ -245,13 +350,17 @@ void update()
     // Ball mit linker "Wand"
     if (ball.x <= 0)
     {
-        score_right_player++;
+        right_paddle.score.count++;
+        snprintf(right_paddle.score.string, 10, "%lu", right_paddle.score.count);
+        right_paddle.score.length = strlen(right_paddle.score.string);
         game_is_ongoing = false;
     }
     // Ball mit rechter "Wand"
     else if (ball.x + ball.size >= window_width_units)
     {
-        score_left_player++;
+        left_paddle.score.count++;
+        snprintf(left_paddle.score.string, 10, "%lu", left_paddle.score.count);
+        left_paddle.score.length = strlen(left_paddle.score.string);
         game_is_ongoing = false;
     }
 
@@ -276,6 +385,23 @@ void render()
     SDL_RenderClear(renderer);
 
     draw_middle_lines(15);
+
+    // Punktestand
+    temp = TTF_RenderText_Solid(score_font, left_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
+    SDL_Texture* left_player_score_texture = SDL_CreateTextureFromSurface(renderer, temp);
+    temp = TTF_RenderText_Solid(score_font, right_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
+    SDL_Texture* right_player_score_texture = SDL_CreateTextureFromSurface(renderer, temp);
+
+
+    SDL_Rect left_score_rect = {.h = SCORE_HEIGHT * unit, .w = left_paddle.score.length * SCORE_WIDTH * unit, .x = unit *(window_width_units / 2.0 - SCORE_HORIZONTAL_OFFSET - SCORE_WIDTH), .y = SCORE_VERTICAL_OFFSET * unit};
+    SDL_Rect right_score_rect = {.h = SCORE_HEIGHT * unit, .w = right_paddle.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 + SCORE_HORIZONTAL_OFFSET), .y = SCORE_VERTICAL_OFFSET * unit};
+
+    SDL_RenderCopy(renderer, left_player_score_texture, NULL, &left_score_rect);
+    SDL_RenderCopy(renderer, right_player_score_texture, NULL, &right_score_rect);
+
+
+    SDL_DestroyTexture(left_player_score_texture);
+    SDL_FreeSurface(temp);
 
     // Game Objekte
     render_paddle(&left_paddle, renderer, unit);
@@ -317,10 +443,14 @@ void game_setup()
     // Startrichtung des Balls setzen (gerade nach links)
     set_ball_direction(PI);
 
-    score_left_player = 0;
-    score_right_player = 0;
+    // Input booleans auf false setzen
+    left_paddle_up = false;
+    left_paddle_down = false;
+    right_paddle_up = false;
+    right_paddle_down = false;
 
     game_is_ongoing = true;
+    ball_served = false;
     render();
 }
 
@@ -331,16 +461,18 @@ int main()
     window = SDL_CreateWindow("Pong Klon", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-    printf("unit: %f\n", unit);
+    TTF_Init();
+    score_font = TTF_OpenFont("assets/prstart.ttf", 20);
 
+    printf("unit: %f\n", unit);
 
     // Äussere Game Loop
     while(match_is_ongoing)
     {
         game_setup();
-        wait_for_keypress(SDL_SCANCODE_SPACE);
+        handle_events();
         // Innere Game Loop
-        while (game_is_ongoing)
+        while (game_is_ongoing && ball_served)
         {
             render();
             handle_events();
@@ -355,8 +487,13 @@ int main()
 
 
     // Ressourcen freigeben
+    SDL_FreeSurface(temp);
+
+
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
+    TTF_CloseFont(score_font);
+    TTF_Quit();
     SDL_Quit();
 
     return 0;
