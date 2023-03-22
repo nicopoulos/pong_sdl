@@ -91,16 +91,14 @@ void handle_events()
                 break;
 
             case SDL_KEYDOWN:
-                if (event.key.keysym.sym == SDLK_ESCAPE)
-                {
-                    quit();
-                    break;
-                }
-
                 switch(event.key.keysym.scancode)
                 {
+                    case SDL_SCANCODE_ESCAPE:
+                        quit();
+                        break;
                     case SDL_SCANCODE_W:
                     {
+                        printf("W pressed\n");
                         left_paddle_up = true;
                         break;
                     }
@@ -129,6 +127,7 @@ void handle_events()
                 {
                     case SDL_SCANCODE_W:
                     {
+                        printf("W let go\n");
                         left_paddle_up = false;
                         break;
                     }
@@ -175,16 +174,15 @@ void handle_events_before_service()
                 break;
 
             case SDL_KEYDOWN:
-                if (event.key.keysym.sym == SDLK_ESCAPE)
-                {
-                    quit();
-                    break;
-                }
-
                 switch(event.key.keysym.scancode)
                 {
+                    case SDL_SCANCODE_ESCAPE:
+                        quit();
+                        return;
+                        break;
                     case SDL_SCANCODE_W:
                     {
+                        printf("left paddle up\n");
                         left_paddle_up = true;
                         break;
                     }
@@ -201,6 +199,7 @@ void handle_events_before_service()
                         break;
                     case SDL_SCANCODE_SPACE:
                         ball_served = true;
+                        return;
                         break;
 
                     default:
@@ -208,6 +207,7 @@ void handle_events_before_service()
 
                 }
                 break;
+
             case SDL_KEYUP:
                 switch(event.key.keysym.scancode)
                 {
@@ -470,7 +470,7 @@ int main()
     while(match_is_ongoing)
     {
         game_setup();
-        handle_events();
+        handle_events_before_service();
         // Innere Game Loop
         while (game_is_ongoing && ball_served)
         {
