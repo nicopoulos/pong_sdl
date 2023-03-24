@@ -55,17 +55,6 @@ void quit()
     match_is_ongoing = false;
 }
 
-void on_window_resize()
-{
-    SDL_GetWindowSize(window, &window_width_px, &window_height_px);
-
-    unit = (float)(window_width_px / 50);
-
-    window_width_units = window_width_px / unit;
-    window_height_units = window_height_px / unit;
-
-    // printf("Fensterdimensionen: %dx%d Pixel\n", window_height_px, window_width_px);
-}
 
 void set_ball_direction(float angle)
 {
@@ -74,173 +63,6 @@ void set_ball_direction(float angle)
 }
 
 
-void handle_events()
-{
-    SDL_Event event;
-    while(SDL_PollEvent(&event))
-    {
-        switch(event.type)
-        {
-            case SDL_QUIT:
-                quit();
-                break;
-
-            case SDL_WINDOWEVENT:
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                    on_window_resize();
-                break;
-
-            case SDL_KEYDOWN:
-                switch(event.key.keysym.scancode)
-                {
-                    case SDL_SCANCODE_ESCAPE:
-                        quit();
-                        break;
-                    case SDL_SCANCODE_W:
-                    {
-                        printf("W pressed\n");
-                        left_paddle_up = true;
-                        break;
-                    }
-                    case SDL_SCANCODE_S:
-                    {
-                        left_paddle_down = true;
-                        break;
-                    }
-                    case SDL_SCANCODE_UP:
-                        right_paddle_up = true;
-                        break;
-                    case SDL_SCANCODE_DOWN:
-                        right_paddle_down = true;
-                        break;
-                    case SDL_SCANCODE_SPACE:
-                        ball_served = true;
-                        break;
-
-                    default:
-                        break;
-
-                }
-                break;
-            case SDL_KEYUP:
-                switch(event.key.keysym.scancode)
-                {
-                    case SDL_SCANCODE_W:
-                    {
-                        printf("W let go\n");
-                        left_paddle_up = false;
-                        break;
-                    }
-                    case SDL_SCANCODE_S:
-                    {
-                        left_paddle_down = false;
-                        break;
-                    }
-                    case SDL_SCANCODE_UP:
-                        right_paddle_up = false;
-                        break;
-                    case SDL_SCANCODE_DOWN:
-                        right_paddle_down = false;
-                        break;
-
-                    default:
-                        break;
-                }
-                break;
-
-            default:
-                break;
-        }
-
-    }
-}
-
-void handle_events_before_service()
-{
-    SDL_Event event;
-    while(1)
-    {
-        SDL_WaitEvent(&event);
-
-        switch(event.type)
-        {
-            case SDL_QUIT:
-                quit();
-                break;
-
-            case SDL_WINDOWEVENT:
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                    on_window_resize();
-                break;
-
-            case SDL_KEYDOWN:
-                switch(event.key.keysym.scancode)
-                {
-                    case SDL_SCANCODE_ESCAPE:
-                        quit();
-                        return;
-                        break;
-                    case SDL_SCANCODE_W:
-                    {
-                        printf("left paddle up\n");
-                        left_paddle_up = true;
-                        break;
-                    }
-                    case SDL_SCANCODE_S:
-                    {
-                        left_paddle_down = true;
-                        break;
-                    }
-                    case SDL_SCANCODE_UP:
-                        right_paddle_up = true;
-                        break;
-                    case SDL_SCANCODE_DOWN:
-                        right_paddle_down = true;
-                        break;
-                    case SDL_SCANCODE_SPACE:
-                        ball_served = true;
-                        return;
-                        break;
-
-                    default:
-                        break;
-
-                }
-                break;
-
-            case SDL_KEYUP:
-                switch(event.key.keysym.scancode)
-                {
-                    case SDL_SCANCODE_W:
-                    {
-                        left_paddle_up = false;
-                        break;
-                    }
-                    case SDL_SCANCODE_S:
-                    {
-                        left_paddle_down = false;
-                        break;
-                    }
-                    case SDL_SCANCODE_UP:
-                        right_paddle_up = false;
-                        break;
-                    case SDL_SCANCODE_DOWN:
-                        right_paddle_down = false;
-                        break;
-
-                    default:
-                        break;
-                }
-                break;
-
-            default:
-                break;
-        }
-
-
-        SDL_Delay(MIN_FRAME_DURATION);
-    }
-}
 
 void update()
 {
@@ -393,7 +215,7 @@ void render()
     SDL_Texture* right_player_score_texture = SDL_CreateTextureFromSurface(renderer, temp);
 
 
-    SDL_Rect left_score_rect = {.h = SCORE_HEIGHT * unit, .w = left_paddle.score.length * SCORE_WIDTH * unit, .x = unit *(window_width_units / 2.0 - SCORE_HORIZONTAL_OFFSET - SCORE_WIDTH), .y = SCORE_VERTICAL_OFFSET * unit};
+    SDL_Rect left_score_rect = {.h = SCORE_HEIGHT * unit, .w = left_paddle.score.length * SCORE_WIDTH * unit, .x = unit *(window_width_units / 2.0 - SCORE_HORIZONTAL_OFFSET - SCORE_WIDTH * left_paddle.score.length), .y = SCORE_VERTICAL_OFFSET * unit};
     SDL_Rect right_score_rect = {.h = SCORE_HEIGHT * unit, .w = right_paddle.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 + SCORE_HORIZONTAL_OFFSET), .y = SCORE_VERTICAL_OFFSET * unit};
 
     SDL_RenderCopy(renderer, left_player_score_texture, NULL, &left_score_rect);
@@ -412,6 +234,190 @@ void render()
 
     // Framebuffer aktualisieren
     SDL_RenderPresent(renderer);
+}
+
+void on_window_resize()
+{
+    SDL_GetWindowSize(window, &window_width_px, &window_height_px);
+
+    unit = (float)(window_width_px / 50.0);
+
+    window_width_units = window_width_px / unit;
+    window_height_units = window_height_px / unit;
+
+    render();
+
+    // printf("Fensterdimensionen: %dx%d Pixel\n", window_height_px, window_width_px);
+}
+
+
+void handle_events()
+{
+    SDL_Event event;
+    while(SDL_PollEvent(&event))
+    {
+        switch(event.type)
+        {
+            case SDL_QUIT:
+                quit();
+                break;
+
+            case SDL_WINDOWEVENT:
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    on_window_resize();
+                break;
+
+            case SDL_KEYDOWN:
+                switch(event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_ESCAPE:
+                        quit();
+                        break;
+                    case SDL_SCANCODE_W:
+                    {
+                        printf("W pressed\n");
+                        left_paddle_up = true;
+                        break;
+                    }
+                    case SDL_SCANCODE_S:
+                    {
+                        left_paddle_down = true;
+                        break;
+                    }
+                    case SDL_SCANCODE_UP:
+                        right_paddle_up = true;
+                        break;
+                    case SDL_SCANCODE_DOWN:
+                        right_paddle_down = true;
+                        break;
+                    case SDL_SCANCODE_SPACE:
+                        ball_served = true;
+                        break;
+
+                    default:
+                        break;
+
+                }
+                break;
+            case SDL_KEYUP:
+                switch(event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_W:
+                    {
+                        printf("W let go\n");
+                        left_paddle_up = false;
+                        break;
+                    }
+                    case SDL_SCANCODE_S:
+                    {
+                        left_paddle_down = false;
+                        break;
+                    }
+                    case SDL_SCANCODE_UP:
+                        right_paddle_up = false;
+                        break;
+                    case SDL_SCANCODE_DOWN:
+                        right_paddle_down = false;
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            default:
+                break;
+        }
+
+    }
+}
+
+void handle_events_before_service()
+{
+    SDL_Event event;
+    while(1)
+    {
+        SDL_WaitEvent(&event);
+
+        switch(event.type)
+        {
+            case SDL_QUIT:
+                quit();
+                return;
+                break;
+
+            case SDL_WINDOWEVENT:
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
+                    on_window_resize();
+                break;
+
+            case SDL_KEYDOWN:
+                switch(event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_ESCAPE:
+                        quit();
+                        return;
+                        break;
+                    case SDL_SCANCODE_W:
+                    {
+                        printf("left paddle up\n");
+                        left_paddle_up = true;
+                        break;
+                    }
+                    case SDL_SCANCODE_S:
+                    {
+                        left_paddle_down = true;
+                        break;
+                    }
+                    case SDL_SCANCODE_UP:
+                        right_paddle_up = true;
+                        break;
+                    case SDL_SCANCODE_DOWN:
+                        right_paddle_down = true;
+                        break;
+                    case SDL_SCANCODE_SPACE:
+                        ball_served = true;
+                        return;
+                        break;
+
+                    default:
+                        break;
+
+                }
+                break;
+
+            case SDL_KEYUP:
+                switch(event.key.keysym.scancode)
+                {
+                    case SDL_SCANCODE_W:
+                    {
+                        left_paddle_up = false;
+                        break;
+                    }
+                    case SDL_SCANCODE_S:
+                    {
+                        left_paddle_down = false;
+                        break;
+                    }
+                    case SDL_SCANCODE_UP:
+                        right_paddle_up = false;
+                        break;
+                    case SDL_SCANCODE_DOWN:
+                        right_paddle_down = false;
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            default:
+                break;
+        }
+
+
+        SDL_Delay(MIN_FRAME_DURATION);
+    }
 }
 
 void wait_for_keypress(int scancode)
@@ -441,7 +447,10 @@ void game_setup()
     ball.y = (window_height_units - ball.size) / 2;
 
     // Startrichtung des Balls setzen (gerade nach links)
-    set_ball_direction(PI);
+    if ((left_paddle.score.count + right_paddle.score.count) % 2 == 0)
+        set_ball_direction(PI);
+    else
+        set_ball_direction(0);
 
     // Input booleans auf false setzen
     left_paddle_up = false;
@@ -458,7 +467,7 @@ int main()
 {
     // Initialisierung
     SDL_Init(SDL_INIT_VIDEO);
-    window = SDL_CreateWindow("Pong Klon", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("Pong Klon", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, INITIAL_WINDOW_WIDTH, INITIAL_WINDOW_HEIGHT, SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
     TTF_Init();
