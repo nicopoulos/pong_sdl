@@ -223,7 +223,7 @@ void render()
 
 
     SDL_DestroyTexture(left_player_score_texture);
-    SDL_FreeSurface(temp);
+    SDL_DestroyTexture(right_player_score_texture);
 
     // Game Objekte
     render_paddle(&left_paddle, renderer, unit);
@@ -236,7 +236,7 @@ void render()
     SDL_RenderPresent(renderer);
 }
 
-void on_window_resize()
+void set_dimensions()
 {
     SDL_GetWindowSize(window, &window_width_px, &window_height_px);
 
@@ -260,11 +260,6 @@ void handle_events()
         {
             case SDL_QUIT:
                 quit();
-                break;
-
-            case SDL_WINDOWEVENT:
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                    on_window_resize();
                 break;
 
             case SDL_KEYDOWN:
@@ -346,11 +341,6 @@ void handle_events_before_service()
                 return;
                 break;
 
-            case SDL_WINDOWEVENT:
-                if (event.window.event == SDL_WINDOWEVENT_RESIZED)
-                    on_window_resize();
-                break;
-
             case SDL_KEYDOWN:
                 switch(event.key.keysym.scancode)
                 {
@@ -420,31 +410,17 @@ void handle_events_before_service()
     }
 }
 
-void wait_for_keypress(int scancode)
-{
-    SDL_Event ev;
-    while(1)
-    {
-        SDL_WaitEvent(&ev);
-        if (ev.type == SDL_KEYDOWN)
-        {
-            if (ev.key.keysym.scancode == scancode)
-                return;
-        }
-        SDL_Delay(MIN_FRAME_DURATION);
-    }
-}
 
 void game_setup()
 {
-    left_paddle.y = (window_height_units - left_paddle.height) / 2;
+    left_paddle.y = (window_height_units - left_paddle.height) / 2.0;
     left_paddle.x = PADDLE_OFFSET;
 
-    right_paddle.y = (window_height_units - right_paddle.height) / 2;
+    right_paddle.y = (window_height_units - right_paddle.height) / 2.0;
     right_paddle.x = (window_width_units - right_paddle.width - PADDLE_OFFSET);
 
-    ball.x = (window_width_units - ball.size) / 2;
-    ball.y = (window_height_units - ball.size) / 2;
+    ball.x = (window_width_units - ball.size) / 2.0;
+    ball.y = (window_height_units - ball.size) / 2.0;
 
     // Startrichtung des Balls setzen (gerade nach links)
     if ((left_paddle.score.count + right_paddle.score.count) % 2 == 0)
@@ -475,6 +451,8 @@ int main()
 
     printf("unit: %f\n", unit);
 
+    set_dimensions(); // dimensionen des Fensters setzen
+
     // Äussere Game Loop
     while(match_is_ongoing)
     {
@@ -499,8 +477,8 @@ int main()
     SDL_FreeSurface(temp);
 
 
-    SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
     TTF_CloseFont(score_font);
     TTF_Quit();
     SDL_Quit();
