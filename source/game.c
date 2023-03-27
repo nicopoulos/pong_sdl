@@ -18,6 +18,8 @@
 #define SCORE_HORIZONTAL_OFFSET 2
 #define SCORE_VERTICAL_OFFSET 3
 
+#define NUM_MIDDLE_LINES 5
+
 #define BALL_VELOCITY_FACTOR 40
 #define PADDLE_VELOCITY 40
 #define MAX_BOUNCE_OFF_ANGLE (PI / 4.0) // 45°
@@ -54,6 +56,7 @@ int update_game();
 int game_input();
 int quit_game();
 
+int draw_middle_lines(unsigned int num_lines);
 int on_ball_serve();
 
 double get_rand_double(double min, double max);
@@ -347,6 +350,7 @@ int render_game()
     SDL_RenderClear(renderer);
 
     // draw_middle_lines(15);
+    draw_middle_lines(NUM_MIDDLE_LINES);
 
     // score
     temp = TTF_RenderText_Solid(score_font, left_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
@@ -406,6 +410,21 @@ int on_ball_serve()
 
 }
 
+int draw_middle_lines(unsigned int num_lines)
+{
+    SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    int num_segments = num_lines * 2 - 1;
+    double segment_length = window_height / num_segments;
+    double segment_width = unit / 3.0;
+    for (int i = 0; i < num_segments; i+= 2)
+    {
+        SDL_Rect rect = {.h = segment_length, .w = segment_width, .x = (window_width - segment_width) / 2.0, .y = segment_length * i};
+        SDL_RenderFillRect(renderer, &rect);
+
+    }
+
+    return 0;
+}
 
 
 
