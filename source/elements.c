@@ -1,8 +1,6 @@
 #include "elements.h"
 #include "constants.h"
 
-#define MARGIN 40
-
 
 
 
@@ -12,7 +10,7 @@ void render_button(SDL_Renderer* renderer, const button_t* button)
     if (button->selected == true)
     {
         SDL_SetRenderDrawColor(renderer, 0xA0, 0xA0, 0, 0xFF); // Gelb
-        SDL_Rect select_rect = {.h = button->rect.h + MARGIN, .w = button->rect.w + MARGIN, .x = button->rect.x - (MARGIN / 2.0), .y = button->rect.y - (MARGIN / 2.0)};
+        SDL_Rect select_rect = {.h = button->rect.h + (button->margin * 2.0), .w = button->rect.w + (button->margin * 2.0), .x = button->rect.x - button->margin, .y = button->rect.y - button->margin};
         SDL_RenderFillRect(renderer, &select_rect);
     }
 
@@ -22,7 +20,7 @@ void render_button(SDL_Renderer* renderer, const button_t* button)
     // text
     SDL_Surface* surf = TTF_RenderText_Solid(button->font, button->text, (SDL_Colour){0xFF, 0xFF, 0xFF, 0xFF});
     SDL_Texture* text = SDL_CreateTextureFromSurface(renderer, surf);
-    SDL_Rect text_rect = {.h = button->rect.h - MARGIN, .w = button->rect.w - MARGIN, .x = button->rect.x + (MARGIN / 2.0), .y = button->rect.y + (MARGIN / 2.0)};
+    SDL_Rect text_rect = {.h = button->rect.h - (button->margin * 2.0), .w = button->rect.w - (button->margin * 2.0), .x = button->rect.x + button->margin, .y = button->rect.y + button->margin};
     SDL_RenderCopy(renderer, text, NULL, &text_rect);
 }
 

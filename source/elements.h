@@ -15,6 +15,7 @@ typedef struct button_t
     SDL_Rect rect;
     TTF_Font* font;
     char text[20];
+    unsigned int margin;
     bool selected;
 
 } button_t;

@@ -6,6 +6,7 @@
 
 
 // constants
+#define MARGIN 20
 
 // external variables
 extern SDL_Window* screen;
@@ -118,12 +119,14 @@ int home()
     start_button.rect.x = (window_width - start_button.rect.w) / 2.0;
     start_button.rect.y = (window_height - start_button.rect.h) / 2.0 - padding;
     start_button.font = home_font;
+    start_button.margin = start_button.rect.h / 8.0;
     start_button.selected = true;
     snprintf(start_button.text, 20, "Spiel Starten");
 
     quit_button.rect = start_button.rect;
     quit_button.rect.y = window_height / 2.0 + padding;
-    quit_button.font = home_font;
+    quit_button.font = start_button.font;
+    quit_button.margin = start_button.margin;
     quit_button.selected = false;
     snprintf(quit_button.text, 20, "Beenden");
 
