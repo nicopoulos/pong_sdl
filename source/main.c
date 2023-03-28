@@ -18,6 +18,8 @@ int window_height;
 
 double unit;
 
+TTF_Font* main_font;
+
 int main()
 {
     // Setup
@@ -33,6 +35,8 @@ int main()
 
     unit = window_width / 50.0;
 
+    main_font = TTF_OpenFont("assets/prstart.ttf", 25);
+
 
     // Menu
     home();
@@ -41,6 +45,8 @@ int main()
 
 
     // Clean up
+    TTF_CloseFont(main_font);
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(screen);
     TTF_Quit();

@@ -20,6 +20,7 @@ typedef struct button_t
 
 } button_t;
 
+
 // Game Objects
 
 typedef struct score_t

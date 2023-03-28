@@ -33,6 +33,7 @@ extern int window_width;
 extern int window_height;
 
 extern double unit;
+extern TTF_Font* main_font;
 
 // local variables
 double window_width_units;
@@ -40,8 +41,10 @@ double window_height_units;
 bool game_running;
 bool ball_served;
 bool match_ongoing;
+bool start_new_game_after_exit;
 SDL_Surface* temp;
-TTF_Font* score_font;
+
+
 
 // objects
 paddle_t left_paddle;
@@ -58,13 +61,16 @@ int quit_game();
 
 int draw_middle_lines(unsigned int num_lines);
 int on_ball_serve();
-
 double get_rand_double(double min, double max);
+
+
+
+int pause_game();
 
 // only public function
 int game()
 {
-
+    start_new_game_after_exit = false;
     srand((unsigned int)time(NULL));
     window_height_units = window_height / unit;
     window_width_units = window_width / unit;
@@ -81,7 +87,7 @@ int game()
 
     ball.size = 1;
 
-    score_font = TTF_OpenFont("assets/prstart.ttf", 25);
+    main_font = TTF_OpenFont("assets/prstart.ttf", 25);
 
     SDL_Delay(500);
 
@@ -101,10 +107,10 @@ int game()
 
 
     // clean up
-    TTF_CloseFont(score_font);
+    TTF_CloseFont(main_font);
     SDL_FreeSurface(temp);
 
-    return 0;
+    return start_new_game_after_exit;
 }
 
 
@@ -156,7 +162,7 @@ int game_input()
                 switch(event.key.keysym.scancode)
                 {
                     case SDL_SCANCODE_ESCAPE:
-                        quit_game();
+                        pause_game();
                         break;
                     case SDL_SCANCODE_W:
                     {
@@ -353,12 +359,12 @@ int render_game()
     draw_middle_lines(NUM_MIDDLE_LINES);
 
     // score
-    temp = TTF_RenderText_Solid(score_font, left_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
+    temp = TTF_RenderText_Solid(main_font, left_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
     SDL_Texture* left_player_score_texture = SDL_CreateTextureFromSurface(renderer, temp);
-    temp = TTF_RenderText_Solid(score_font, right_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
+    temp = TTF_RenderText_Solid(main_font, right_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
     SDL_Texture* right_player_score_texture = SDL_CreateTextureFromSurface(renderer, temp);
 
-    SDL_Rect left_score_rect = {.h = SCORE_HEIGHT * unit, .w = left_paddle.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 - SCORE_HORIZONTAL_OFFSET - SCORE_WIDTH), .y = SCORE_VERTICAL_OFFSET * unit};
+    SDL_Rect left_score_rect = {.h = SCORE_HEIGHT * unit, .w = left_paddle.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 - SCORE_HORIZONTAL_OFFSET - SCORE_WIDTH * left_paddle.score.length), .y = SCORE_VERTICAL_OFFSET * unit};
 
     SDL_Rect right_score_rect = {.h = SCORE_HEIGHT * unit, .w = right_paddle.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 + SCORE_HORIZONTAL_OFFSET), .y = SCORE_VERTICAL_OFFSET * unit};
 
@@ -427,7 +433,6 @@ int draw_middle_lines(unsigned int num_lines)
 }
 
 
-
 double get_rand_double(double min, double max)
 {
     double fractional = (double)rand() / ((double)RAND_MAX);
@@ -436,6 +441,195 @@ double get_rand_double(double min, double max)
 
     return angle;
 }
+
+
+
+// pause menu
+#define NUM_BUTTONS 3
+button_t resume_button;
+button_t restart_button;
+button_t return_to_home_button;
+button_t buttons[NUM_BUTTONS];
+int selected_button_idx;
+
+SDL_Texture* court_screenshot;
+bool close_overlay;
+
+int render_overlay()
+{
+    // overlay window
+    // background (court)
+
+    printf("E\n");
+    SDL_RenderClear(renderer);
+
+    printf("F\n");
+    SDL_RenderCopy(renderer, court_screenshot, NULL, NULL);
+
+    printf("G\n");
+    // buttons
+    for (int i = 0; i < NUM_BUTTONS; i++)
+    {
+        render_button(renderer, &(buttons[i]));
+    }
+
+    SDL_RenderPresent(renderer);
+
+    return 0;
+}
+
+int overlay_input()
+{
+    SDL_Event event;
+    SDL_WaitEvent(&event);
+    switch(event.type)
+    {
+        case SDL_KEYDOWN:
+        {
+            switch(event.key.keysym.scancode)
+            {
+                case SDL_SCANCODE_UP:
+                {
+                    if (selected_button_idx != 0)
+                    {
+                        buttons[selected_button_idx].selected = false;
+                        selected_button_idx--;
+                        buttons[selected_button_idx].selected = true;
+                    }
+
+                    break;
+                }
+
+                case SDL_SCANCODE_DOWN:
+                {
+                    if (selected_button_idx != NUM_BUTTONS - 1)
+                    {
+                        buttons[selected_button_idx].selected= false;
+                        selected_button_idx++;
+                        buttons[selected_button_idx].selected = true;
+                    }
+
+                    break;
+                }
+
+                case SDL_SCANCODE_RETURN:
+                {
+                    switch(selected_button_idx)
+                    {
+                        case 0: // resume
+                        {
+                            close_overlay = true;
+                            break;
+                        }
+                        case 1: // restart
+                        {
+                            game_running = false;
+                            match_ongoing = false;
+                            close_overlay = true;
+                            start_new_game_after_exit = true;
+                            break;
+                        }
+                        case 2: // return to menu
+                        { 
+                            game_running = false;
+                            match_ongoing = false;
+                            close_overlay = true;
+
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                default:
+                {
+                    break;
+                }
+            }
+            break;
+        }
+
+    }
+
+    return 0;
+
+}
+
+int pause_game()
+{
+    printf("paused game\n");
+
+    double padding = window_height / 15.0;
+
+    buttons[1].rect.h = window_height / 6.0;
+    printf("A\n");
+    buttons[1].rect.w = window_width / 3.0;
+    printf("B\n");
+    buttons[1].rect.x = (window_width - buttons[1].rect.w) / 2.0;
+    printf("C\n");
+    buttons[1].rect.y = (window_height - buttons[1].rect.h) / 2.0;
+    printf("D\n");
+    buttons[1].font = main_font;
+    buttons[1].margin = buttons[1].rect.h / 8.0;
+    buttons[1].selected = false;
+
+    snprintf(buttons[1].text, 20, "Neustarten");
+
+    buttons[0] = buttons[1];
+    buttons[0].rect.y = buttons[1].rect.y - buttons[1].rect.h - padding;
+    buttons[0].selected = true;
+    snprintf(buttons[0].text, 20, "Fortsetzen");
+
+
+    buttons[2] = buttons[1];
+    buttons[2].rect.y = buttons[1].rect.y + buttons[1].rect.h + padding;
+    snprintf(buttons[2].text, 20, "Zum Homescreen");
+
+    const Uint32 format = SDL_PIXELFORMAT_ABGR8888;
+
+    printf("E\n");
+
+    SDL_Surface* scrsht = SDL_CreateRGBSurfaceWithFormat(0, window_width, window_height, 32, format);
+    if (scrsht == NULL)
+    {
+        fprintf(stderr, "error creating surface\n");
+        return 1;
+    }
+    printf("F\n");
+    SDL_RenderReadPixels(renderer, NULL, format, scrsht->pixels, scrsht->pitch);
+    printf("G\n");
+    court_screenshot = SDL_CreateTextureFromSurface(renderer, scrsht);
+    SDL_FreeSurface(scrsht);
+    printf("court_screenshot: %p\n", court_screenshot);
+    if (court_screenshot == NULL)
+    {
+
+        fprintf(stderr, "error creating texture\n");
+        return 1;
+    }
+    
+    printf("H\n");
+
+    close_overlay = false;
+    // Rendering
+    while(close_overlay == false)
+    {
+        printf("I\n");
+        render_overlay();
+        overlay_input();
+    }
+    SDL_DestroyTexture(court_screenshot);
+
+
+    
+    return 0;
+}
+
 
 
 

@@ -14,17 +14,18 @@ extern SDL_Renderer* renderer;
 extern int window_width;
 extern int window_height;
 
+extern TTF_Font* main_font;
+
 // local variables
 bool quit_home = false;
 SDL_Texture* background = NULL;
-TTF_Font* home_font;
 
 button_t start_button;
 button_t quit_button; 
 
 int start_game()
 {
-    game();
+    while(game());
     return 0;
 }
 
@@ -110,7 +111,7 @@ int home()
     background = SDL_CreateTextureFromSurface(renderer, temp);
     SDL_FreeSurface(temp);
 
-    home_font = TTF_OpenFont("assets/prstart.ttf", 30); 
+    main_font = TTF_OpenFont("assets/prstart.ttf", 30); 
 
     float padding = window_height / 15.0;
 
@@ -118,7 +119,7 @@ int home()
     start_button.rect.w = window_width / 3.0;
     start_button.rect.x = (window_width - start_button.rect.w) / 2.0;
     start_button.rect.y = (window_height - start_button.rect.h) / 2.0 - padding;
-    start_button.font = home_font;
+    start_button.font = main_font;
     start_button.margin = start_button.rect.h / 8.0;
     start_button.selected = true;
     snprintf(start_button.text, 20, "Spiel Starten");
@@ -136,7 +137,7 @@ int home()
         render_home();
         home_input();
     }
-    TTF_CloseFont(home_font);
+    TTF_CloseFont(main_font);
     SDL_DestroyTexture(background);
     return 0;
 }
