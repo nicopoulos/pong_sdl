@@ -562,18 +562,12 @@ int overlay_input()
 
 int pause_game()
 {
-    printf("paused game\n");
-
     double padding = window_height / 15.0;
 
     buttons[1].rect.h = window_height / 6.0;
-    printf("A\n");
     buttons[1].rect.w = window_width / 3.0;
-    printf("B\n");
     buttons[1].rect.x = (window_width - buttons[1].rect.w) / 2.0;
-    printf("C\n");
     buttons[1].rect.y = (window_height - buttons[1].rect.h) / 2.0;
-    printf("D\n");
     buttons[1].font = main_font;
     buttons[1].margin = buttons[1].rect.h / 8.0;
     buttons[1].selected = false;
@@ -590,9 +584,9 @@ int pause_game()
     buttons[2].rect.y = buttons[1].rect.y + buttons[1].rect.h + padding;
     snprintf(buttons[2].text, 20, "Zum Homescreen");
 
-    const Uint32 format = SDL_PIXELFORMAT_ABGR8888;
+    selected_button_idx = 0;
 
-    printf("E\n");
+    const Uint32 format = SDL_PIXELFORMAT_ABGR8888;
 
     SDL_Surface* scrsht = SDL_CreateRGBSurfaceWithFormat(0, window_width, window_height, 32, format);
     if (scrsht == NULL)
@@ -600,12 +594,9 @@ int pause_game()
         fprintf(stderr, "error creating surface\n");
         return 1;
     }
-    printf("F\n");
     SDL_RenderReadPixels(renderer, NULL, format, scrsht->pixels, scrsht->pitch);
-    printf("G\n");
     court_screenshot = SDL_CreateTextureFromSurface(renderer, scrsht);
     SDL_FreeSurface(scrsht);
-    printf("court_screenshot: %p\n", court_screenshot);
     if (court_screenshot == NULL)
     {
 
