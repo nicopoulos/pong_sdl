@@ -18,7 +18,9 @@ extern TTF_Font* main_font;
 
 // local variables
 bool quit_home = false;
-SDL_Texture* background = NULL;
+SDL_Texture* background;
+SDL_Texture* title_texture;
+SDL_Rect title_rect;
 
 button_t start_button;
 button_t quit_button; 
@@ -93,6 +95,8 @@ int render_home()
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, background, NULL, NULL);
 
+    // title
+    SDL_RenderCopy(renderer, title_texture, NULL, &title_rect);
     // buttons
     render_button(renderer, &start_button);
     render_button(renderer, &quit_button);
@@ -109,23 +113,34 @@ int home()
     printf("Home\n");
     SDL_Surface* temp = IMG_Load("assets/home_background.jpg");
     background = SDL_CreateTextureFromSurface(renderer, temp);
-    SDL_FreeSurface(temp);
 
     main_font = TTF_OpenFont("assets/prstart.ttf", 30); 
 
-    float padding = window_height / 20.0;
 
-    start_button.rect.h = window_height / 6.0;
-    start_button.rect.w = window_width / 3.0;
+    // title 
+
+    float padding = window_height / 20.0;
+    temp = TTF_RenderText_Solid(main_font, "PONG", (SDL_Color){0xFF, 0xFF, 0xFF, 0xFF});
+    title_texture = SDL_CreateTextureFromSurface(renderer, temp);
+    title_rect.h = window_height / 4.0;
+    title_rect.w = window_width / 2.0;
+    title_rect.y = padding;
+    title_rect.x = window_width / 4.0;
+
+    SDL_FreeSurface(temp);
+
+    // buttons
+    start_button.rect.h = window_height / 5.0;
+    start_button.rect.w = window_width / 2.5;
     start_button.rect.x = (window_width - start_button.rect.w) / 2.0;
-    start_button.rect.y = (window_height / 2.0) - start_button.rect.h - padding;
+    start_button.rect.y = (window_height - start_button.rect.h) / 2.0;
     start_button.font = main_font;
     start_button.margin = start_button.rect.h / 8.0;
     start_button.selected = true;
     snprintf(start_button.text, 20, "Spiel Starten");
 
     quit_button.rect = start_button.rect;
-    quit_button.rect.y = (window_height / 2.0) + padding;
+    quit_button.rect.y = start_button.rect.y + start_button.rect.h + padding;
     quit_button.font = start_button.font;
     quit_button.margin = start_button.margin;
     quit_button.selected = false;
@@ -137,8 +152,11 @@ int home()
         render_home();
         home_input();
     }
+
     TTF_CloseFont(main_font);
     SDL_DestroyTexture(background);
+    SDL_DestroyTexture(title_texture);
+
     return 0;
 }
 

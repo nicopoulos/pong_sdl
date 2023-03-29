@@ -5,9 +5,10 @@
 #include <stdbool.h>
 #include <math.h>
 #include <time.h>
+#include <SDL2/SDL_image.h>
 
 // constants
-#define SCORE_TO_WIN 3
+#define SCORE_TO_WIN 11
 
 #define PADDLE_OFFSET 2
 #define MAX_FPS 120
@@ -54,6 +55,9 @@ const paddle_t * serving_paddle;
 ball_t ball;
 
 
+enum player {LEFT_PLAYER, RIGHT_PLAYER};
+
+
 int setup_game();
 int render_game();
 int update_game();
@@ -95,7 +99,6 @@ int game()
 
     main_font = TTF_OpenFont("assets/prstart.ttf", 25);
 
-    SDL_Delay(500);
 
     game_running = true;
     // game loop
@@ -454,9 +457,9 @@ double get_rand_double(double min, double max)
 int check_win_condition()
 {
     if (left_paddle.score.count == SCORE_TO_WIN)
-        on_win(0);
+        on_win(LEFT_PLAYER);
     else if (right_paddle.score.count == SCORE_TO_WIN)
-        on_win(1);
+        on_win(RIGHT_PLAYER);
     
     return 0;
 }
@@ -582,7 +585,7 @@ int pause_game()
     double padding = window_height / 15.0;
 
     buttons[1].rect.h = window_height / 6.0;
-    buttons[1].rect.w = window_width / 3.0;
+    buttons[1].rect.w = window_width / 2.5;
     buttons[1].rect.x = (window_width - buttons[1].rect.w) / 2.0;
     buttons[1].rect.y = (window_height - buttons[1].rect.h) / 2.0;
     buttons[1].font = main_font;
@@ -613,7 +616,6 @@ int pause_game()
     }
     SDL_RenderReadPixels(renderer, NULL, format, scrsht->pixels, scrsht->pitch);
     court_screenshot = SDL_CreateTextureFromSurface(renderer, scrsht);
-    SDL_FreeSurface(scrsht);
     if (court_screenshot == NULL)
     {
 
@@ -631,6 +633,7 @@ int pause_game()
         render_overlay();
         overlay_input();
     }
+    SDL_FreeSurface(scrsht);
     SDL_DestroyTexture(court_screenshot);
 
 
@@ -644,6 +647,12 @@ int pause_game()
 // win overlay
 #define NUM_WIN_BUTTONS 2
 button_t win_buttons[NUM_WIN_BUTTONS];
+
+SDL_Texture* win_title_texture;
+SDL_Rect win_title_rect;
+
+SDL_Texture* trophy_texture;
+SDL_Rect trophy_rect;
 
 
 int win_overlay_input()
@@ -732,6 +741,8 @@ int render_win_overlay()
         render_button(renderer, &(win_buttons[i]));
     }
 
+    SDL_RenderCopy(renderer, trophy_texture, NULL, &trophy_rect);
+
     SDL_RenderPresent(renderer);
 
     return 0;
@@ -741,10 +752,16 @@ int on_win(int winner)
 {
     double padding = window_height / 20.0;
 
+
+    // buttons
     win_buttons[0].rect.h = window_height / 6.0;
     win_buttons[0].rect.w = window_width / 3.0;
-    win_buttons[0].rect.x = (window_width - win_buttons[0].rect.w) / 2.0;
-    win_buttons[0].rect.y = (window_height / 2.0 ) - win_buttons[0].rect.h - padding;
+    if (winner == LEFT_PLAYER)
+        win_buttons[0].rect.x = (window_width / 2.0 - win_buttons[0].rect.w) / 2.0;
+    else
+        win_buttons[0].rect.x = (window_width / 2.0) + ((window_width / 2.0 - win_buttons[0].rect.w) / 2.0);
+
+    win_buttons[0].rect.y = (window_height - win_buttons[0].rect.h ) / 2.0;
     win_buttons[0].font = main_font;
     win_buttons[0].margin = win_buttons[0].rect.h / 8.0;
     win_buttons[0].selected = true;
@@ -752,12 +769,19 @@ int on_win(int winner)
     snprintf(win_buttons[0].text, 20, "Neues Spiel");
 
     win_buttons[1] = win_buttons[0];
-    win_buttons[1].rect.y = (window_height / 2.0) + padding;
+    win_buttons[1].rect.y = win_buttons[0].rect.y + win_buttons[0].rect.h + padding;
     win_buttons[1].selected = false;
     snprintf(win_buttons[1].text, 20, "Zum Homescreen");
 
-
     selected_button_idx = 0;
+
+    // trophy
+    trophy_texture = IMG_LoadTexture(renderer, "assets/trophy.png");
+    trophy_rect.h = window_height / 5.0;
+    trophy_rect.w = window_width / 5.0;
+    trophy_rect.x = win_buttons[0].rect.x + ((win_buttons[0].rect.w - trophy_rect.w) / 2.0);
+    trophy_rect.y = win_buttons[0].rect.y - trophy_rect.h - padding;
+
 
     const Uint32 format = SDL_PIXELFORMAT_ABGR8888;
 
@@ -769,7 +793,6 @@ int on_win(int winner)
     }
     SDL_RenderReadPixels(renderer, NULL, format, scrsht->pixels, scrsht->pitch);
     court_screenshot = SDL_CreateTextureFromSurface(renderer, scrsht);
-    SDL_FreeSurface(scrsht);
     if (court_screenshot == NULL)
     {
 
@@ -788,7 +811,10 @@ int on_win(int winner)
         win_overlay_input();
     }
 
+    SDL_FreeSurface(scrsht);
     SDL_DestroyTexture(court_screenshot);
+    SDL_DestroyTexture(win_title_texture);
+    SDL_DestroyTexture(trophy_texture);
 
 
     
