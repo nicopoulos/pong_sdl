@@ -113,19 +113,19 @@ int home()
 
     main_font = TTF_OpenFont("assets/prstart.ttf", 30); 
 
-    float padding = window_height / 15.0;
+    float padding = window_height / 20.0;
 
     start_button.rect.h = window_height / 6.0;
     start_button.rect.w = window_width / 3.0;
     start_button.rect.x = (window_width - start_button.rect.w) / 2.0;
-    start_button.rect.y = (window_height - start_button.rect.h) / 2.0 - padding;
+    start_button.rect.y = (window_height / 2.0) - start_button.rect.h - padding;
     start_button.font = main_font;
     start_button.margin = start_button.rect.h / 8.0;
     start_button.selected = true;
     snprintf(start_button.text, 20, "Spiel Starten");
 
     quit_button.rect = start_button.rect;
-    quit_button.rect.y = window_height / 2.0 + padding;
+    quit_button.rect.y = (window_height / 2.0) + padding;
     quit_button.font = start_button.font;
     quit_button.margin = start_button.margin;
     quit_button.selected = false;
