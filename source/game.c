@@ -1,6 +1,7 @@
 #include "game.h"
 #include "elements.h"
 #include "constants.h"
+#include "audio.h"
 
 #include <stdbool.h>
 #include <math.h>
@@ -8,7 +9,7 @@
 #include <SDL2/SDL_image.h>
 
 // constants
-#define SCORE_TO_WIN 11
+#define SCORE_TO_WIN 3
 
 #define PADDLE_OFFSET 2
 #define MAX_FPS 120
@@ -454,9 +455,13 @@ double get_rand_double(double min, double max)
 int check_win_condition()
 {
     if (left_paddle.score.count == SCORE_TO_WIN)
+    {
         win_overlay(LEFT_PLAYER);
+    }
     else if (right_paddle.score.count == SCORE_TO_WIN)
+    {
         win_overlay(RIGHT_PLAYER);
+    }
     
     return 0;
 }
@@ -747,9 +752,9 @@ int render_win_overlay()
 
 int win_overlay(int winner)
 {
+    play_wav("assets/applause.wav");
+    
     double padding = window_height / 20.0;
-
-
     // buttons
     win_buttons[0].rect.h = window_height / 6.0;
     win_buttons[0].rect.w = window_width / 3.0;

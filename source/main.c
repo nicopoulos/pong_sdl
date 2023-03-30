@@ -12,6 +12,7 @@
 
 SDL_Window* screen;
 SDL_Renderer* renderer;
+SDL_AudioDeviceID* audio_dev_id;
 
 int window_width;
 int window_height;
@@ -24,14 +25,16 @@ int main()
 {
     // Setup
     // SDL
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
     screen = SDL_CreateWindow("Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 10, 10, SDL_WINDOW_FULLSCREEN_DESKTOP);
     SDL_GetWindowSize(screen, &window_width, &window_height);
     renderer = SDL_CreateRenderer(screen, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
     // SDL_image
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
     // SDL_ttf
     TTF_Init();
+
 
     unit = window_width / 50.0;
 

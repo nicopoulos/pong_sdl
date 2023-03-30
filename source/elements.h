@@ -21,6 +21,7 @@ typedef struct button_t
 } button_t;
 
 
+
 // Game Objects
 
 typedef struct score_t
@@ -53,6 +54,8 @@ typedef struct ball_t
     double velocity_y;
 
 } ball_t;
+
+
 
 
 void render_button(SDL_Renderer* renderer, const button_t* button);
