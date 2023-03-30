@@ -67,7 +67,7 @@ int check_win_condition();
 
 
 int on_ball_serve();
-int on_win(int winner);
+int win_overlay(int winner);
 
 
 int draw_middle_lines(unsigned int num_lines);
@@ -75,7 +75,7 @@ double get_rand_double(double min, double max);
 
 
 
-int pause_game();
+int pause_overlay();
 
 // only public function
 int game()
@@ -170,7 +170,7 @@ int game_input()
                 switch(event.key.keysym.scancode)
                 {
                     case SDL_SCANCODE_ESCAPE:
-                        pause_game();
+                        pause_overlay();
                         break;
                     case SDL_SCANCODE_W:
                     {
@@ -454,19 +454,24 @@ double get_rand_double(double min, double max)
 int check_win_condition()
 {
     if (left_paddle.score.count == SCORE_TO_WIN)
-        on_win(LEFT_PLAYER);
+        win_overlay(LEFT_PLAYER);
     else if (right_paddle.score.count == SCORE_TO_WIN)
-        on_win(RIGHT_PLAYER);
+        win_overlay(RIGHT_PLAYER);
     
     return 0;
 }
 
+
+
+
+
+// GUI
+
+
+
 // pause menu
 #define NUM_PAUSE_BUTTONS 3
-button_t resume_button;
-button_t restart_button;
-button_t return_to_home_button;
-button_t buttons[NUM_PAUSE_BUTTONS];
+button_t pause_buttons[NUM_PAUSE_BUTTONS];
 int selected_button_idx;
 
 SDL_Texture* court_screenshot;
@@ -484,7 +489,7 @@ int render_overlay()
     // buttons
     for (int i = 0; i < NUM_PAUSE_BUTTONS; i++)
     {
-        render_button(renderer, &(buttons[i]));
+        render_button(renderer, &(pause_buttons[i]));
     }
 
     SDL_RenderPresent(renderer);
@@ -506,9 +511,9 @@ int overlay_input()
                 {
                     if (selected_button_idx != 0)
                     {
-                        buttons[selected_button_idx].selected = false;
+                        pause_buttons[selected_button_idx].selected = false;
                         selected_button_idx--;
-                        buttons[selected_button_idx].selected = true;
+                        pause_buttons[selected_button_idx].selected = true;
                     }
 
                     break;
@@ -518,9 +523,9 @@ int overlay_input()
                 {
                     if (selected_button_idx != NUM_PAUSE_BUTTONS - 1)
                     {
-                        buttons[selected_button_idx].selected= false;
+                        pause_buttons[selected_button_idx].selected= false;
                         selected_button_idx++;
-                        buttons[selected_button_idx].selected = true;
+                        pause_buttons[selected_button_idx].selected = true;
                     }
 
                     break;
@@ -574,29 +579,29 @@ int overlay_input()
 
 }
 
-int pause_game()
+int pause_overlay()
 {
     double padding = window_height / 15.0;
 
-    buttons[1].rect.h = window_height / 6.0;
-    buttons[1].rect.w = window_width / 2.5;
-    buttons[1].rect.x = (window_width - buttons[1].rect.w) / 2.0;
-    buttons[1].rect.y = (window_height - buttons[1].rect.h) / 2.0;
-    buttons[1].font = main_font;
-    buttons[1].margin = buttons[1].rect.h / 8.0;
-    buttons[1].selected = false;
+    pause_buttons[1].rect.h = window_height / 6.0;
+    pause_buttons[1].rect.w = window_width / 2.5;
+    pause_buttons[1].rect.x = (window_width - pause_buttons[1].rect.w) / 2.0;
+    pause_buttons[1].rect.y = (window_height - pause_buttons[1].rect.h) / 2.0;
+    pause_buttons[1].font = main_font;
+    pause_buttons[1].margin = pause_buttons[1].rect.h / 8.0;
+    pause_buttons[1].selected = false;
 
-    snprintf(buttons[1].text, 20, "Neustarten");
+    snprintf(pause_buttons[1].text, 20, "Neustarten");
 
-    buttons[0] = buttons[1];
-    buttons[0].rect.y = buttons[1].rect.y - buttons[1].rect.h - padding;
-    buttons[0].selected = true;
-    snprintf(buttons[0].text, 20, "Fortsetzen");
+    pause_buttons[0] = pause_buttons[1];
+    pause_buttons[0].rect.y = pause_buttons[1].rect.y - pause_buttons[1].rect.h - padding;
+    pause_buttons[0].selected = true;
+    snprintf(pause_buttons[0].text, 20, "Fortsetzen");
 
 
-    buttons[2] = buttons[1];
-    buttons[2].rect.y = buttons[1].rect.y + buttons[1].rect.h + padding;
-    snprintf(buttons[2].text, 20, "Zum Homescreen");
+    pause_buttons[2] = pause_buttons[1];
+    pause_buttons[2].rect.y = pause_buttons[1].rect.y + pause_buttons[1].rect.h + padding;
+    snprintf(pause_buttons[2].text, 20, "Zum Homescreen");
 
     selected_button_idx = 0;
 
@@ -740,7 +745,7 @@ int render_win_overlay()
     return 0;
 }
 
-int on_win(int winner)
+int win_overlay(int winner)
 {
     double padding = window_height / 20.0;
 
@@ -772,7 +777,7 @@ int on_win(int winner)
     trophy_rect.h = window_height / 5.0;
     trophy_rect.w = window_width / 5.0;
     trophy_rect.x = win_buttons[0].rect.x + ((win_buttons[0].rect.w - trophy_rect.w) / 2.0);
-    trophy_rect.y = win_buttons[0].rect.y - trophy_rect.h - padding;
+    trophy_rect.y = win_buttons[0].rect.y - trophy_rect.h;
 
 
     const Uint32 format = SDL_PIXELFORMAT_ABGR8888;
