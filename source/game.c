@@ -97,8 +97,6 @@ int game()
 
     ball.size = 1;
 
-    main_font = TTF_OpenFont("assets/prstart.ttf", 25);
-
 
     game_running = true;
     // game loop
@@ -118,7 +116,6 @@ int game()
 
 
     // clean up
-    TTF_CloseFont(main_font);
     SDL_FreeSurface(temp);
 
     return start_new_game_after_exit;
@@ -480,13 +477,10 @@ int render_overlay()
     // overlay window
     // background (court)
 
-    printf("E\n");
     SDL_RenderClear(renderer);
 
-    printf("F\n");
     SDL_RenderCopy(renderer, court_screenshot, NULL, NULL);
 
-    printf("G\n");
     // buttons
     for (int i = 0; i < NUM_PAUSE_BUTTONS; i++)
     {
@@ -623,13 +617,11 @@ int pause_game()
         return 1;
     }
     
-    printf("H\n");
 
     close_overlay = false;
     // Rendering
     while(close_overlay == false)
     {
-        printf("I\n");
         render_overlay();
         overlay_input();
     }
@@ -800,13 +792,11 @@ int on_win(int winner)
         return 1;
     }
     
-    printf("H\n");
 
     close_overlay = false;
     // Rendering
     while(close_overlay == false)
     {
-        printf("I\n");
         render_win_overlay();
         win_overlay_input();
     }

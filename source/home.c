@@ -110,7 +110,6 @@ int render_home()
 
 int home()
 {
-    printf("Home\n");
     SDL_Surface* temp = IMG_Load("assets/home_background.jpg");
     background = SDL_CreateTextureFromSurface(renderer, temp);
 
@@ -153,7 +152,6 @@ int home()
         home_input();
     }
 
-    TTF_CloseFont(main_font);
     SDL_DestroyTexture(background);
     SDL_DestroyTexture(title_texture);
 

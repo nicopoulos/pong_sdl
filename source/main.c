@@ -29,7 +29,7 @@ int main()
     SDL_GetWindowSize(screen, &window_width, &window_height);
     renderer = SDL_CreateRenderer(screen, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     // SDL_image
-    IMG_Init(IMG_INIT_JPG);
+    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
     // SDL_ttf
     TTF_Init();
 
@@ -47,10 +47,14 @@ int main()
     // Clean up
     TTF_CloseFont(main_font);
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(screen);
     TTF_Quit();
+
     IMG_Quit();
+
+    SDL_DestroyRenderer(renderer);
+
+    SDL_DestroyWindow(screen);
+
     SDL_Quit();
 
     return 0;
