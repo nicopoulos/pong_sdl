@@ -6,11 +6,14 @@
 
 
 // constants
-#define MARGIN 20
 
 // external variables
 extern SDL_Window* screen;
 extern SDL_Renderer* renderer;
+
+extern SDL_GameController* left_gamepad;
+extern SDL_GameController* right_gamepad;
+
 extern int window_width;
 extern int window_height;
 
@@ -79,6 +82,43 @@ int home_input()
             break;
         }
 
+        case SDL_CONTROLLERBUTTONDOWN:
+        {
+            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+            {
+                switch(event.cbutton.button)
+                {
+                    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    {
+                        start_button.selected = true;
+                        quit_button.selected = false;
+                        break;
+                    } 
+                    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    {
+                        quit_button.selected = true;
+                        start_button.selected = false;
+                        break;
+                    }
+                    case SDL_CONTROLLER_BUTTON_B:
+                    case SDL_CONTROLLER_BUTTON_A:
+                    case SDL_CONTROLLER_BUTTON_X:
+                    case SDL_CONTROLLER_BUTTON_Y:
+                    {
+                        if (start_button.selected)
+                            start_game();
+                        else if (quit_button.selected)
+                            quit_home = true;
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+    
+            break;
+        }
+
     }
 
     return 0;
@@ -119,7 +159,7 @@ int home()
     // title 
 
     float padding = window_height / 20.0;
-    temp = TTF_RenderText_Solid(main_font, "PONG", (SDL_Color){0xFF, 0xFF, 0xFF, 0xFF});
+    temp = TTF_RenderText_Solid(main_font, "TENNIS", (SDL_Color){0xFF, 0xFF, 0xFF, 0xFF});
     title_texture = SDL_CreateTextureFromSurface(renderer, temp);
     title_rect.h = window_height / 4.0;
     title_rect.w = window_width / 2.0;

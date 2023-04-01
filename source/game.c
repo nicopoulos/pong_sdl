@@ -9,7 +9,7 @@
 #include <SDL2/SDL_image.h>
 
 // constants
-#define SCORE_TO_WIN 3
+#define SCORE_TO_WIN 2
 
 #define PADDLE_OFFSET 2
 #define MAX_FPS 120
@@ -31,6 +31,9 @@
 // extern variables
 extern SDL_Window* screen;
 extern SDL_Renderer* renderer;
+
+extern SDL_GameController* left_gamepad;
+extern SDL_GameController* right_gamepad;
 
 extern int window_width;
 extern int window_height;
@@ -225,6 +228,133 @@ int game_input()
                         break;
                 }
                 break;
+            case SDL_CONTROLLERBUTTONDOWN:
+            {
+                if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+                {
+
+                    switch(event.cbutton.button)
+                    {
+                        case SDL_CONTROLLER_BUTTON_START:
+                        case SDL_CONTROLLER_BUTTON_BACK:
+                        {
+                            pause_overlay();
+                            break;
+                        }
+                        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                        {
+                            left_paddle.upwards = true;
+                            left_paddle.downwards = false;
+
+                            break;
+                        }
+                        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                        {
+                            left_paddle.upwards = false;
+                            left_paddle.downwards = true;
+
+                            break;
+                        }
+
+                        case SDL_CONTROLLER_BUTTON_A:
+                        case SDL_CONTROLLER_BUTTON_B:
+                        case SDL_CONTROLLER_BUTTON_X:
+                        case SDL_CONTROLLER_BUTTON_Y:
+                        {
+                            if (ball_served == false && serving_paddle == &left_paddle)
+                            {
+                                on_ball_serve();
+                            }
+                            break;
+                        }
+
+                        default:
+                            break;
+                    }
+                }
+                else if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(right_gamepad))
+                {
+                    switch(event.cbutton.button)
+                    {
+                        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                        {
+                            right_paddle.upwards = true;
+                            right_paddle.downwards = false;
+
+                            break;
+                        }
+                        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                        {
+                            right_paddle.upwards = false;
+                            right_paddle.downwards = true;
+
+                            break;
+                        }
+
+                        case SDL_CONTROLLER_BUTTON_A:
+                        case SDL_CONTROLLER_BUTTON_B:
+                        case SDL_CONTROLLER_BUTTON_X:
+                        case SDL_CONTROLLER_BUTTON_Y:
+                        {
+                            if (ball_served == false && serving_paddle == &right_paddle)
+                            {
+                                on_ball_serve();
+                            }
+                            break;
+                        }
+
+                        default:
+                            break;
+                    }
+                }
+
+                break;
+            }
+            case SDL_CONTROLLERBUTTONUP:
+            {
+                if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+                {
+                    switch(event.cbutton.button)
+                    {
+                        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                        {
+                            left_paddle.upwards = false;
+                            break;
+                        }
+                        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                        {
+                            left_paddle.downwards = false;
+                            break;
+                        }
+
+
+                        default:
+                            break;
+                    }
+                }
+                else if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(right_gamepad))
+                {
+                    switch(event.cbutton.button)
+                    {
+                        case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                        {
+                            right_paddle.upwards = false;
+                            break;
+                        }
+                        case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                        {
+                            right_paddle.downwards = false;
+                            break;
+                        }
+
+
+                        default:
+                            break;
+                    }
+                }
+
+                break;
+            }
 
             default:
                 break;
@@ -578,6 +708,76 @@ int overlay_input()
             break;
         }
 
+        case SDL_CONTROLLERBUTTONDOWN:
+        {
+            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+            {
+                switch(event.cbutton.button)
+                {
+                    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    {
+                        if (selected_button_idx != 0)
+                        {
+                            pause_buttons[selected_button_idx].selected = false;
+                            selected_button_idx--;
+                            pause_buttons[selected_button_idx].selected = true;
+                        }
+
+                        break;
+                        break;
+                    } 
+                    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    {
+                        if (selected_button_idx != NUM_PAUSE_BUTTONS - 1)
+                        {
+                            pause_buttons[selected_button_idx].selected= false;
+                            selected_button_idx++;
+                            pause_buttons[selected_button_idx].selected = true;
+                        }
+                        break;
+                    }
+                    case SDL_CONTROLLER_BUTTON_B:
+                    case SDL_CONTROLLER_BUTTON_A:
+                    case SDL_CONTROLLER_BUTTON_X:
+                    case SDL_CONTROLLER_BUTTON_Y:
+                    {
+                        switch(selected_button_idx)
+                        {
+                            case 0: // resume
+                            {
+                                close_overlay = true;
+                                break;
+                            }
+                            case 1: // restart
+                            {
+                                game_running = false;
+                                match_ongoing = false;
+                                close_overlay = true;
+                                start_new_game_after_exit = true;
+                                break;
+                            }
+                            case 2: // return to menu
+                            { 
+                                game_running = false;
+                                match_ongoing = false;
+                                close_overlay = true;
+
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
+
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            break;
+        }
     }
 
     return 0;
@@ -726,6 +926,71 @@ int win_overlay_input()
                 }
             }
             break;
+        }
+
+        case SDL_CONTROLLERBUTTONDOWN:
+        {
+            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+            {
+                switch(event.cbutton.button)
+                {
+                    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                    {
+                        if (selected_button_idx != 0)
+                        {
+                            win_buttons[selected_button_idx].selected = false;
+                            selected_button_idx--;
+                            win_buttons[selected_button_idx].selected = true;
+                        }
+
+                        break;
+                    }
+
+                    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                    {
+                        if (selected_button_idx != NUM_WIN_BUTTONS - 1)
+                        {
+                            win_buttons[selected_button_idx].selected= false;
+                            selected_button_idx++;
+                            win_buttons[selected_button_idx].selected = true;
+                        }
+
+                        break;
+                    }
+
+                    case SDL_CONTROLLER_BUTTON_A:
+                    case SDL_CONTROLLER_BUTTON_B:
+                    case SDL_CONTROLLER_BUTTON_X:
+                    case SDL_CONTROLLER_BUTTON_Y:
+                    {
+                        switch(selected_button_idx)
+                        {
+                            case 0: // restart
+                            {
+                                game_running = false;
+                                match_ongoing = false;
+                                close_overlay = true;
+                                start_new_game_after_exit = true;
+                                break;
+                            }
+                            case 1: // return to menu
+                            { 
+                                game_running = false;
+                                match_ongoing = false;
+                                close_overlay = true;
+
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
+
+                        break;
+                    }
+                }
+            }
         }
 
     }
