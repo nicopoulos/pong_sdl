@@ -639,12 +639,16 @@ int render_overlay()
     return 0;
 }
 
-int overlay_input()
+bool overlay_input()
 {
     SDL_Event event;
     SDL_WaitEvent(&event);
+    bool rerender_necessary = true;
     switch(event.type)
     {
+        case SDL_CONTROLLERAXISMOTION:
+            rerender_necessary = false;
+            break;
         case SDL_KEYDOWN:
         {
             switch(event.key.keysym.scancode)
@@ -729,6 +733,8 @@ int overlay_input()
                             selected_button_idx--;
                             pause_buttons[selected_button_idx].selected = true;
                         }
+                        else
+                            rerender_necessary = false;
 
                         break;
                         break;
@@ -741,6 +747,8 @@ int overlay_input()
                             selected_button_idx++;
                             pause_buttons[selected_button_idx].selected = true;
                         }
+                        else
+                            rerender_necessary = false;
                         break;
                     }
                     case SDL_CONTROLLER_BUTTON_B:
@@ -787,7 +795,7 @@ int overlay_input()
         }
     }
 
-    return 0;
+    return rerender_necessary;
 
 }
 
@@ -837,10 +845,11 @@ int pause_overlay()
 
     close_overlay = false;
     // Rendering
+    render_overlay();
     while(close_overlay == false)
     {
-        render_overlay();
-        overlay_input();
+        if (overlay_input())
+            render_overlay();
     }
     SDL_FreeSurface(scrsht);
     SDL_DestroyTexture(court_screenshot);
@@ -868,8 +877,12 @@ int win_overlay_input()
 {
     SDL_Event event;
     SDL_WaitEvent(&event);
+    bool rerender_necessary = true;
     switch(event.type)
     {
+        case SDL_CONTROLLERAXISMOTION:
+            rerender_necessary = false;
+            break;
         case SDL_KEYDOWN:
         {
             switch(event.key.keysym.scancode)
@@ -949,6 +962,8 @@ int win_overlay_input()
                             selected_button_idx--;
                             win_buttons[selected_button_idx].selected = true;
                         }
+                        else
+                            rerender_necessary = false;
 
                         break;
                     }
@@ -961,6 +976,8 @@ int win_overlay_input()
                             selected_button_idx++;
                             win_buttons[selected_button_idx].selected = true;
                         }
+                        else
+                            rerender_necessary = false;
 
                         break;
                     }
@@ -1002,7 +1019,7 @@ int win_overlay_input()
 
     }
 
-    return 0;
+    return rerender_necessary;
 }
 
 int render_win_overlay()

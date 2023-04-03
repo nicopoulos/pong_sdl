@@ -6,6 +6,7 @@
 
 
 // constants
+#define JOYSTICK_DEADZONE 8000
 
 // external variables
 extern SDL_Window* screen;
@@ -34,15 +35,18 @@ int start_game()
     return 0;
 }
 
-int home_input()
+bool home_input()
 {
     SDL_Event event;
     SDL_WaitEvent(&event);
+    bool rerender_necessary = true;
     switch(event.type)
     {
+        case SDL_CONTROLLERAXISMOTION:
+            rerender_necessary = false;
+            break;
         case SDL_QUIT:
         {
-            printf("Quit\n");
             quit_home = true;
             break;
         }
@@ -119,9 +123,30 @@ int home_input()
             break;
         }
 
+        /*
+        {
+            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY && event.caxis.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+            {
+                int axis_value = event.caxis.value;
+                if (axis_value <= - JOYSTICK_DEADZONE)
+                {
+                    start_button.selected = true;
+                    quit_button.selected = false;
+                }
+                else if (axis_value >= JOYSTICK_DEADZONE)
+                {
+                    quit_button.selected = true;
+                    start_button.selected = false;
+
+                }
+            }
+
+            break;
+        }
+        */ 
     }
 
-    return 0;
+    return rerender_necessary;
 }
 
 int update_home()
@@ -185,11 +210,11 @@ int home()
     quit_button.selected = false;
     snprintf(quit_button.text, 20, "Beenden");
 
+    render_home();
     while(!quit_home)
     {
-        // Rendering
-        render_home();
-        home_input();
+        if (home_input())
+            render_home();
     }
 
     SDL_DestroyTexture(background);
