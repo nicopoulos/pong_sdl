@@ -7,6 +7,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #include "constants.h"
+#include "elements.h"
 #include "home.h"
 #include "game.h"
 
@@ -16,6 +17,10 @@ SDL_AudioDeviceID* audio_dev_id;
 
 SDL_GameController* left_gamepad = NULL;
 SDL_GameController* right_gamepad = NULL;
+
+// players
+player_t left_player;
+player_t right_player;
 
 int window_width;
 int window_height;
@@ -43,18 +48,20 @@ int main()
 
     main_font = TTF_OpenFont("assets/prstart.ttf", 25);
 
-
+    // initialize controllers
+    left_player.gamepad = NULL;
+    right_player.gamepad = NULL;
     for (int i = 0; i < SDL_NumJoysticks(); i++)
     {
         if (SDL_IsGameController(i))
         {
-            if (left_gamepad == NULL)
+            if (left_player.gamepad == NULL)
             {
-                left_gamepad = SDL_GameControllerOpen(i);
+                left_player.gamepad = SDL_GameControllerOpen(i);
             }
-            else if (right_gamepad == NULL)
+            else if (right_player.gamepad == NULL)
             {
-                right_gamepad = SDL_GameControllerOpen(i);
+                right_player.gamepad = SDL_GameControllerOpen(i);
             }
         }
     }

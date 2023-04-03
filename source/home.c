@@ -12,6 +12,9 @@
 extern SDL_Window* screen;
 extern SDL_Renderer* renderer;
 
+extern player_t left_player;
+extern player_t right_player;
+
 extern SDL_GameController* left_gamepad;
 extern SDL_GameController* right_gamepad;
 
@@ -88,7 +91,7 @@ bool home_input()
 
         case SDL_CONTROLLERBUTTONDOWN:
         {
-            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_player.gamepad))
             {
                 switch(event.cbutton.button)
                 {

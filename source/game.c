@@ -13,7 +13,7 @@
 
 #define PADDLE_OFFSET 2
 #define MAX_FPS 120
-#define MIN_FRAME_DURATION 1000.0 / MAX_FPS
+#define MIN_FRAME_DURATION (1000.0 / MAX_FPS)
 #define MAX_FRAME_DURATION 100
 
 #define SCORE_HEIGHT 5
@@ -23,8 +23,8 @@
 
 #define NUM_MIDDLE_LINES 5
 
-#define BALL_VELOCITY_FACTOR 40
-#define PADDLE_VELOCITY 40
+#define BALL_VELOCITY_FACTOR 45
+#define PADDLE_VELOCITY 50
 #define MAX_BOUNCE_OFF_ANGLE (PI / 4.0) // 45°
 
 #define JOYSTICK_DEADZONE 8000
@@ -35,8 +35,11 @@
 extern SDL_Window* screen;
 extern SDL_Renderer* renderer;
 
-extern SDL_GameController* left_gamepad;
-extern SDL_GameController* right_gamepad;
+extern player_t left_player;
+extern player_t right_player;
+
+// extern SDL_GameController* left_gamepad;
+// extern SDL_GameController* right_gamepad;
 
 extern int window_width;
 extern int window_height;
@@ -56,8 +59,8 @@ SDL_Surface* temp;
 
 
 // objects
-paddle_t left_paddle;
-paddle_t right_paddle;
+// paddle_t left_paddle;
+// paddle_t right_paddle;
 const paddle_t * serving_paddle;
 ball_t ball;
 
@@ -92,15 +95,20 @@ int game()
     window_height_units = window_height / unit;
     window_width_units = window_width / unit;
 
-    left_paddle.height = window_height_units / 6.0;
-    left_paddle.width = 1;
-    left_paddle.score.count = 0;
-    left_paddle.score.length = 1;
-    snprintf(left_paddle.score.string, 10, "%lu", left_paddle.score.count);
+    left_player.paddle.height = window_height_units / 6.0;
+    left_player.paddle.width = 1;
+    left_player.score.count = 0;
+    left_player.score.length = 1;
 
-    right_paddle = left_paddle;
-    left_paddle.pos_x = PADDLE_OFFSET;
-    right_paddle.pos_x = window_width_units - PADDLE_OFFSET - right_paddle.width;
+    right_player.paddle = left_player.paddle;
+    right_player.score.count = 0;
+    right_player.score.length = 1;
+
+    left_player.paddle.pos_x = PADDLE_OFFSET;
+    right_player.paddle.pos_x = window_width_units - PADDLE_OFFSET - right_player.paddle.width;
+
+    snprintf(left_player.score.string, 10, "%lu", left_player.score.count);
+    snprintf(right_player.score.string, 10, "%lu", right_player.score.count);
 
     ball.size = 1;
 
@@ -131,26 +139,26 @@ int game()
 
 int setup_game()
 {
-    left_paddle.pos_y = (window_height_units - left_paddle.height) / 2.0;
-    right_paddle.pos_y = left_paddle.pos_y;
+    left_player.paddle.pos_y = (window_height_units - left_player.paddle.height) / 2.0;
+    right_player.paddle.pos_y = left_player.paddle.pos_y;
 
     ball.pos_x = (window_width_units - ball.size) / 2.0;
     ball.pos_y = (window_height_units - ball.size) / 2.0;
 
-    if ((left_paddle.score.count + right_paddle.score.count) % 2 == 0)
+    if ((right_player.score.count + left_player.score.count) % 2 == 0)
     {
-        serving_paddle = &left_paddle;
-        ball.pos_x = left_paddle.pos_x + left_paddle.width;
+        serving_paddle = &(left_player.paddle);
+        ball.pos_x = left_player.paddle.pos_x + left_player.paddle.width;
     }
     else
     {
-        serving_paddle = &right_paddle;
-        ball.pos_x = right_paddle.pos_x - ball.size;
+        serving_paddle = &(right_player.paddle);
+        ball.pos_x = right_player.paddle.pos_x - ball.size;
     }
 
     // set input booleans to false
-    left_paddle.movement = 0.0;
-    right_paddle.movement = 0.0;
+    left_player.paddle.movement = 0.0;
+    right_player.paddle.movement = 0.0;
 
     match_ongoing = true;
     ball_served = false;
@@ -179,19 +187,19 @@ int game_input()
                         break;
                     case SDL_SCANCODE_W:
                     {
-                        left_paddle.movement = -1.0;
+                        left_player.paddle.movement = -1.0;
                         break;
                     }
                     case SDL_SCANCODE_S:
                     {
-                        left_paddle.movement = 1.0;
+                        left_player.paddle.movement = 1.0;
                         break;
                     }
                     case SDL_SCANCODE_UP:
-                        right_paddle.movement = -1.0;
+                        right_player.paddle.movement = -1.0;
                         break;
                     case SDL_SCANCODE_DOWN:
-                        right_paddle.movement = 1.0;
+                        right_player.paddle.movement = 1.0;
                         break;
                     case SDL_SCANCODE_SPACE:
                     {
@@ -211,12 +219,12 @@ int game_input()
                     case SDL_SCANCODE_W:
                     case SDL_SCANCODE_S:
                     {
-                        left_paddle.movement = 0.0;
+                        left_player.paddle.movement = 0.0;
                         break;
                     }
                     case SDL_SCANCODE_UP:
                     case SDL_SCANCODE_DOWN:
-                        right_paddle.movement = 0.0;
+                        right_player.paddle.movement = 0.0;
                         break;
 
                     default:
@@ -225,7 +233,7 @@ int game_input()
                 break;
             case SDL_CONTROLLERBUTTONDOWN:
             {
-                if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+                if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_player.gamepad))
                 {
 
                     switch(event.cbutton.button)
@@ -238,13 +246,13 @@ int game_input()
                         }
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
                         {
-                            left_paddle.movement = -1.0;
+                            left_player.paddle.movement = -1.0;
 
                             break;
                         }
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         {
-                            left_paddle.movement = 1.0;
+                            left_player.paddle.movement = 1.0;
 
                             break;
                         }
@@ -254,7 +262,7 @@ int game_input()
                         case SDL_CONTROLLER_BUTTON_X:
                         case SDL_CONTROLLER_BUTTON_Y:
                         {
-                            if (ball_served == false && serving_paddle == &left_paddle)
+                            if (ball_served == false && serving_paddle == &(left_player.paddle))
                             {
                                 on_ball_serve();
                             }
@@ -265,19 +273,19 @@ int game_input()
                             break;
                     }
                 }
-                else if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(right_gamepad))
+                else if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(right_player.gamepad))
                 {
                     switch(event.cbutton.button)
                     {
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
                         {
-                            right_paddle.movement = -1.0;
+                            right_player.paddle.movement = -1.0;
 
                             break;
                         }
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         {
-                            right_paddle.movement = 1.0;
+                            right_player.paddle.movement = 1.0;
 
                             break;
                         }
@@ -287,7 +295,7 @@ int game_input()
                         case SDL_CONTROLLER_BUTTON_X:
                         case SDL_CONTROLLER_BUTTON_Y:
                         {
-                            if (ball_served == false && serving_paddle == &right_paddle)
+                            if (ball_served == false && serving_paddle == &(right_player.paddle))
                             {
                                 on_ball_serve();
                             }
@@ -303,14 +311,14 @@ int game_input()
             }
             case SDL_CONTROLLERBUTTONUP:
             {
-                if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+                if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_player.gamepad))
                 {
                     switch(event.cbutton.button)
                     {
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         {
-                            left_paddle.movement = 0.0;
+                            left_player.paddle.movement = 0.0;
                             break;
                         }
 
@@ -318,17 +326,16 @@ int game_input()
                             break;
                     }
                 }
-                else if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(right_gamepad))
+                else if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(right_player.gamepad))
                 {
                     switch(event.cbutton.button)
                     {
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         {
-                            right_paddle.movement = 0.0;
+                            right_player.paddle.movement = 0.0;
                             break;
                         }
-
 
                         default:
                             break;
@@ -342,29 +349,29 @@ int game_input()
             {
                 if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY)
                 {
-                    if (event.caxis.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+                    if (event.caxis.which == SDL_GameControllerGetPlayerIndex(left_player.gamepad))
                     {
                         int axis_val = event.caxis.value;
                         if (axis_val <= -JOYSTICK_DEADZONE || axis_val >= JOYSTICK_DEADZONE)
                         {
-                            left_paddle.movement = (double)axis_val / 32767.0;
+                            left_player.paddle.movement = (double)axis_val / 32767.0;
                         }
                         else
                         {
-                            left_paddle.movement = 0.0;
+                            left_player.paddle.movement = 0.0;
                         }
 
                     }
-                    else if (event.caxis.which == SDL_GameControllerGetPlayerIndex(right_gamepad))
+                    else if (event.caxis.which == SDL_GameControllerGetPlayerIndex(right_player.gamepad))
                     {
                         int axis_val = event.caxis.value;
                         if (axis_val <= -JOYSTICK_DEADZONE || axis_val >= JOYSTICK_DEADZONE)
                         {
-                            left_paddle.movement = (double)axis_val / 32767.0;
+                            right_player.paddle.movement = (double)axis_val / 32767.0;
                         }
                         else
                         {
-                            left_paddle.movement = 0.0;
+                            right_player.paddle.movement = 0.0;
                         }
 
                     }
@@ -414,25 +421,25 @@ int update_game()
     }
 
     // left paddle movement
-    left_paddle.pos_y += left_paddle.movement * PADDLE_VELOCITY * frame_duration_s;
+    left_player.paddle.pos_y += left_player.paddle.movement * PADDLE_VELOCITY * frame_duration_s;
     // right paddle movement
-    right_paddle.pos_y += right_paddle.movement * PADDLE_VELOCITY * frame_duration_s;
+    right_player.paddle.pos_y += right_player.paddle.movement * PADDLE_VELOCITY * frame_duration_s;
 
 
 
     // collisiondetection
 
     // left paddle with walls
-    if (left_paddle.pos_y <= 0)
-        left_paddle.pos_y = 0;
-    else if (left_paddle.pos_y >= window_height_units - right_paddle.height)
-        left_paddle.pos_y = window_height_units - right_paddle.height;
+    if (left_player.paddle.pos_y <= 0)
+        left_player.paddle.pos_y = 0;
+    else if (left_player.paddle.pos_y >= window_height_units - left_player.paddle.height)
+        left_player.paddle.pos_y = window_height_units - left_player.paddle.height;
     
     // right paddle with walls
-    if (right_paddle.pos_y <= 0)
-        right_paddle.pos_y = 0;
-    else if (right_paddle.pos_y >= window_height_units - right_paddle.height)
-        right_paddle.pos_y = window_height_units - right_paddle.height;
+    if (right_player.paddle.pos_y <= 0)
+        right_player.paddle.pos_y = 0;
+    else if (right_player.paddle.pos_y >= window_height_units - right_player.paddle.height)
+        right_player.paddle.pos_y = window_height_units - right_player.paddle.height;
 
     // ball top wall
     if (ball.pos_y <= 0)
@@ -449,25 +456,25 @@ int update_game()
 
     double tolerance = (double)ball.size; // should be higher, the faster the ball
     // ball with left paddle
-    if ((ball.pos_y + ball.size > left_paddle.pos_y && ball.pos_y < left_paddle.pos_y + left_paddle.height) && ball.pos_x <= left_paddle.pos_x + left_paddle.width && ball.pos_x >= left_paddle.pos_x + left_paddle.width - tolerance)
+    if ((ball.pos_y + ball.size > left_player.paddle.pos_y && ball.pos_y < left_player.paddle.pos_y + left_player.paddle.height) && ball.pos_x <= left_player.paddle.pos_x + left_player.paddle.width && ball.pos_x >= left_player.paddle.pos_x + left_player.paddle.width - tolerance)
     {
         // depending on position on the paddle, the ball should move with a different angle
-        double paddle_center_y = left_paddle.pos_y + (left_paddle.height / 2.0);
+        double paddle_center_y = left_player.paddle.pos_y + (left_player.paddle.height / 2.0);
         double ball_center_y = ball.pos_y + (ball.size / 2.0);
         double offset = ball_center_y - paddle_center_y;
-        double bounce_off_factor = offset / (left_paddle.height / 2.0);
+        double bounce_off_factor = offset / (left_player.paddle.height / 2.0);
         if (bounce_off_factor > 1)
             bounce_off_factor = 1;
         double bounce_off_angle = bounce_off_factor * MAX_BOUNCE_OFF_ANGLE;
         set_ball_direction(&ball, bounce_off_angle);
     }
     // ball with right paddle
-    else if ((ball.pos_y + ball.size > right_paddle.pos_y && ball.pos_y < right_paddle.pos_y + right_paddle.height) && (ball.pos_x + ball.size >= right_paddle.pos_x && ball.pos_x + ball.size <= right_paddle.pos_x + tolerance))
+    else if ((ball.pos_y + ball.size > right_player.paddle.pos_y && ball.pos_y < right_player.paddle.pos_y + right_player.paddle.height) && (ball.pos_x + ball.size >= right_player.paddle.pos_x && ball.pos_x + ball.size <= right_player.paddle.pos_x + tolerance))
     {
-        double paddle_center_y = right_paddle.pos_y + (right_paddle.height / 2.0);
+        double paddle_center_y = right_player.paddle.pos_y + (right_player.paddle.height / 2.0);
         double ball_center_y = ball.pos_y + (ball.size / 2.0);
         double offset = ball_center_y - paddle_center_y;
-        double bounce_off_factor = offset / (right_paddle.height / 2.0);
+        double bounce_off_factor = offset / (right_player.paddle.height / 2.0);
         if (bounce_off_factor > 1)
             bounce_off_factor = 1;
         double bounce_off_angle = PI - (bounce_off_factor * MAX_BOUNCE_OFF_ANGLE);
@@ -477,17 +484,17 @@ int update_game()
     // ball with left "wall"
     if (ball.pos_x <= 0)
     {
-        right_paddle.score.count++;
-        snprintf(right_paddle.score.string, 10, "%lu", right_paddle.score.count);
-        right_paddle.score.length = strlen(right_paddle.score.string);
+        right_player.score.count++;
+        snprintf(right_player.score.string, 10, "%lu", right_player.score.count);
+        right_player.score.length = strlen(right_player.score.string);
         match_ongoing = false;
     }
     // ball with right "wall"
     else if (ball.pos_x + ball.size >= window_width_units)
     {
-        left_paddle.score.count++;
-        snprintf(left_paddle.score.string, 10, "%lu", left_paddle.score.count);
-        left_paddle.score.length = strlen(left_paddle.score.string);
+        left_player.score.count++;
+        snprintf(left_player.score.string, 10, "%lu", left_player.score.count);
+        left_player.score.length = strlen(left_player.score.string);
         match_ongoing = false;
     }
 
@@ -506,14 +513,14 @@ int render_game()
     draw_middle_lines(NUM_MIDDLE_LINES);
 
     // score
-    temp = TTF_RenderText_Solid(main_font, left_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
+    temp = TTF_RenderText_Solid(main_font, left_player.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
     SDL_Texture* left_player_score_texture = SDL_CreateTextureFromSurface(renderer, temp);
-    temp = TTF_RenderText_Solid(main_font, right_paddle.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
+    temp = TTF_RenderText_Solid(main_font, right_player.score.string, (SDL_Color){0xFF, 0xFF, 0xFF});
     SDL_Texture* right_player_score_texture = SDL_CreateTextureFromSurface(renderer, temp);
 
-    SDL_Rect left_score_rect = {.h = SCORE_HEIGHT * unit, .w = left_paddle.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 - SCORE_HORIZONTAL_OFFSET - SCORE_WIDTH * left_paddle.score.length), .y = SCORE_VERTICAL_OFFSET * unit};
+    SDL_Rect left_score_rect = {.h = SCORE_HEIGHT * unit, .w = left_player.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 - SCORE_HORIZONTAL_OFFSET - SCORE_WIDTH * left_player.score.length), .y = SCORE_VERTICAL_OFFSET * unit};
 
-    SDL_Rect right_score_rect = {.h = SCORE_HEIGHT * unit, .w = right_paddle.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 + SCORE_HORIZONTAL_OFFSET), .y = SCORE_VERTICAL_OFFSET * unit};
+    SDL_Rect right_score_rect = {.h = SCORE_HEIGHT * unit, .w = right_player.score.length * SCORE_WIDTH * unit, .x = unit * (window_width_units / 2.0 + SCORE_HORIZONTAL_OFFSET), .y = SCORE_VERTICAL_OFFSET * unit};
 
     SDL_RenderCopy(renderer, left_player_score_texture, NULL, &left_score_rect);
     SDL_RenderCopy(renderer, right_player_score_texture, NULL, &right_score_rect);
@@ -522,8 +529,8 @@ int render_game()
     SDL_DestroyTexture(right_player_score_texture);
 
     // game objects
-    render_paddle(&left_paddle, renderer, unit);
-    render_paddle(&right_paddle, renderer, unit);
+    render_paddle(&(left_player.paddle), renderer, unit);
+    render_paddle(&(right_player.paddle), renderer, unit);
 
     render_ball(&ball, renderer, unit);
 
@@ -546,7 +553,7 @@ int quit_game()
 int on_ball_serve()
 {
     double angle = get_rand_double(-MAX_BOUNCE_OFF_ANGLE, MAX_BOUNCE_OFF_ANGLE);
-    if (serving_paddle == &left_paddle)
+    if (serving_paddle == &(left_player.paddle))
     {
         set_ball_direction(&ball, angle);
     }
@@ -591,11 +598,11 @@ double get_rand_double(double min, double max)
 
 int check_win_condition()
 {
-    if (left_paddle.score.count == SCORE_TO_WIN)
+    if (left_player.score.count == SCORE_TO_WIN)
     {
         win_overlay(LEFT_PLAYER);
     }
-    else if (right_paddle.score.count == SCORE_TO_WIN)
+    else if (right_player.score.count == SCORE_TO_WIN)
     {
         win_overlay(RIGHT_PLAYER);
     }
@@ -721,7 +728,7 @@ bool overlay_input()
 
         case SDL_CONTROLLERBUTTONDOWN:
         {
-            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_player.gamepad))
             {
                 switch(event.cbutton.button)
                 {
@@ -950,7 +957,7 @@ int win_overlay_input()
 
         case SDL_CONTROLLERBUTTONDOWN:
         {
-            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_player.gamepad))
             {
                 switch(event.cbutton.button)
                 {

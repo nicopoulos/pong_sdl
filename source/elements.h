@@ -24,6 +24,7 @@ typedef struct button_t
 
 // Game Objects
 
+
 typedef struct score_t
 {
     size_t count;
@@ -38,11 +39,19 @@ typedef struct paddle_t
     size_t width;
     double pos_x;
     double pos_y;
-    score_t score;
     double movement;
 
 
 } paddle_t;
+
+typedef struct player_t
+{
+    paddle_t paddle;
+    score_t score;
+    SDL_GameController* gamepad;
+
+} player_t;
+
 
 typedef struct ball_t
 {
