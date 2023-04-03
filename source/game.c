@@ -9,7 +9,7 @@
 #include <SDL2/SDL_image.h>
 
 // constants
-#define SCORE_TO_WIN 2
+#define SCORE_TO_WIN 11
 
 #define PADDLE_OFFSET 2
 #define MAX_FPS 120
@@ -26,6 +26,9 @@
 #define BALL_VELOCITY_FACTOR 40
 #define PADDLE_VELOCITY 40
 #define MAX_BOUNCE_OFF_ANGLE (PI / 4.0) // 45°
+
+#define JOYSTICK_DEADZONE 8000
+#define JOYSTICK_MAX_VALUE 32767
 
 
 // extern variables
@@ -146,10 +149,8 @@ int setup_game()
     }
 
     // set input booleans to false
-    left_paddle.upwards = false;
-    left_paddle.downwards = false;
-    right_paddle.upwards = false;
-    right_paddle.downwards = false;
+    left_paddle.movement = 0.0;
+    right_paddle.movement = 0.0;
 
     match_ongoing = true;
     ball_served = false;
@@ -178,19 +179,19 @@ int game_input()
                         break;
                     case SDL_SCANCODE_W:
                     {
-                        left_paddle.upwards = true;
+                        left_paddle.movement = -1.0;
                         break;
                     }
                     case SDL_SCANCODE_S:
                     {
-                        left_paddle.downwards = true;
+                        left_paddle.movement = 1.0;
                         break;
                     }
                     case SDL_SCANCODE_UP:
-                        right_paddle.upwards = true;
+                        right_paddle.movement = -1.0;
                         break;
                     case SDL_SCANCODE_DOWN:
-                        right_paddle.downwards = true;
+                        right_paddle.movement = 1.0;
                         break;
                     case SDL_SCANCODE_SPACE:
                     {
@@ -208,20 +209,14 @@ int game_input()
                 switch(event.key.keysym.scancode)
                 {
                     case SDL_SCANCODE_W:
-                    {
-                        left_paddle.upwards = false;
-                        break;
-                    }
                     case SDL_SCANCODE_S:
                     {
-                        left_paddle.downwards = false;
+                        left_paddle.movement = 0.0;
                         break;
                     }
                     case SDL_SCANCODE_UP:
-                        right_paddle.upwards = false;
-                        break;
                     case SDL_SCANCODE_DOWN:
-                        right_paddle.downwards = false;
+                        right_paddle.movement = 0.0;
                         break;
 
                     default:
@@ -243,15 +238,13 @@ int game_input()
                         }
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
                         {
-                            left_paddle.upwards = true;
-                            left_paddle.downwards = false;
+                            left_paddle.movement = -1.0;
 
                             break;
                         }
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         {
-                            left_paddle.upwards = false;
-                            left_paddle.downwards = true;
+                            left_paddle.movement = 1.0;
 
                             break;
                         }
@@ -278,15 +271,13 @@ int game_input()
                     {
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
                         {
-                            right_paddle.upwards = true;
-                            right_paddle.downwards = false;
+                            right_paddle.movement = -1.0;
 
                             break;
                         }
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         {
-                            right_paddle.upwards = false;
-                            right_paddle.downwards = true;
+                            right_paddle.movement = 1.0;
 
                             break;
                         }
@@ -317,16 +308,11 @@ int game_input()
                     switch(event.cbutton.button)
                     {
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                        {
-                            left_paddle.upwards = false;
-                            break;
-                        }
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         {
-                            left_paddle.downwards = false;
+                            left_paddle.movement = 0.0;
                             break;
                         }
-
 
                         default:
                             break;
@@ -337,13 +323,9 @@ int game_input()
                     switch(event.cbutton.button)
                     {
                         case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                        {
-                            right_paddle.upwards = false;
-                            break;
-                        }
                         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                         {
-                            right_paddle.downwards = false;
+                            right_paddle.movement = 0.0;
                             break;
                         }
 
@@ -352,6 +334,43 @@ int game_input()
                             break;
                     }
                 }
+
+                break;
+            }
+
+            case SDL_CONTROLLERAXISMOTION:
+            {
+                if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY)
+                {
+                    if (event.caxis.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
+                    {
+                        int axis_val = event.caxis.value;
+                        if (axis_val <= -JOYSTICK_DEADZONE || axis_val >= JOYSTICK_DEADZONE)
+                        {
+                            left_paddle.movement = (double)axis_val / 32767.0;
+                        }
+                        else
+                        {
+                            left_paddle.movement = 0.0;
+                        }
+
+                    }
+                    else if (event.caxis.which == SDL_GameControllerGetPlayerIndex(right_gamepad))
+                    {
+                        int axis_val = event.caxis.value;
+                        if (axis_val <= -JOYSTICK_DEADZONE || axis_val >= JOYSTICK_DEADZONE)
+                        {
+                            left_paddle.movement = (double)axis_val / 32767.0;
+                        }
+                        else
+                        {
+                            left_paddle.movement = 0.0;
+                        }
+
+                    }
+
+                }
+
 
                 break;
             }
@@ -394,22 +413,10 @@ int update_game()
         ball.pos_y += ball.velocity_y * BALL_VELOCITY_FACTOR * frame_duration_s;
     }
 
-
-    // left paddle up
-    if (left_paddle.upwards && !left_paddle.downwards)
-        left_paddle.pos_y -= PADDLE_VELOCITY * frame_duration_s;
-    // left paddle down
-    if (left_paddle.downwards && !left_paddle.upwards)
-        left_paddle.pos_y += PADDLE_VELOCITY * frame_duration_s;
-
-    // right paddle up
-    if (right_paddle.upwards && !right_paddle.downwards)
-        right_paddle.pos_y -= PADDLE_VELOCITY * frame_duration_s;
-    
-    // right paddle down
-    if (right_paddle.downwards && !right_paddle.upwards)
-        right_paddle.pos_y += PADDLE_VELOCITY * frame_duration_s;
-    
+    // left paddle movement
+    left_paddle.pos_y += left_paddle.movement * PADDLE_VELOCITY * frame_duration_s;
+    // right paddle movement
+    right_paddle.pos_y += right_paddle.movement * PADDLE_VELOCITY * frame_duration_s;
 
 
 

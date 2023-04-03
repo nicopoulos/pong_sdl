@@ -39,8 +39,7 @@ typedef struct paddle_t
     double pos_x;
     double pos_y;
     score_t score;
-    bool upwards;
-    bool downwards;
+    double movement;
 
 
 } paddle_t;
