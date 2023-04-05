@@ -16,9 +16,7 @@ extern SDL_Renderer* renderer;
 extern player_t left_player;
 extern player_t right_player;
 
-extern Mix_Chunk* hit_paddle_sound;
-extern Mix_Chunk* hit_wall_sound;
-extern Mix_Chunk* applause_sound;
+extern Mix_Chunk* select_button_sound;
 
 extern int window_width;
 extern int window_height;
@@ -66,19 +64,29 @@ bool home_input()
                 }
                 case SDL_SCANCODE_UP:
                 {
-                    start_button.selected = true;
-                    quit_button.selected = false;
+                    if (quit_button.selected)
+                    {
+                        start_button.selected = true;
+                        quit_button.selected = false;
+                        Mix_PlayChannel(-1, select_button_sound, 0);
+                    }
                     break;
                 }
                 case SDL_SCANCODE_DOWN:
                 {
-                    start_button.selected = false;
-                    quit_button.selected = true;
+                    if (start_button.selected)
+                    {
+                        start_button.selected = false;
+                        quit_button.selected = true;
+                        Mix_PlayChannel(-1, select_button_sound, 0);
+                    }
                     break;
                 }
                 case SDL_SCANCODE_RETURN:
                 case SDL_SCANCODE_SPACE:
                 {
+                    Mix_PlayChannel(-1, select_button_sound, 0);
+
                     if (start_button.selected)
                         start_game();
                     else if (quit_button.selected)
@@ -99,14 +107,22 @@ bool home_input()
                 {
                     case SDL_CONTROLLER_BUTTON_DPAD_UP:
                     {
-                        start_button.selected = true;
-                        quit_button.selected = false;
+                        if (quit_button.selected)
+                        {
+                            start_button.selected = true;
+                            quit_button.selected = false;
+                            Mix_PlayChannel(-1, select_button_sound, 0);
+                        }
                         break;
                     } 
                     case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                     {
-                        quit_button.selected = true;
-                        start_button.selected = false;
+                        if (start_button.selected)
+                        {
+                            quit_button.selected = true;
+                            start_button.selected = false;
+                            Mix_PlayChannel(-1, select_button_sound, 0);
+                        }
                         break;
                     }
                     case SDL_CONTROLLER_BUTTON_B:
@@ -114,6 +130,7 @@ bool home_input()
                     case SDL_CONTROLLER_BUTTON_X:
                     case SDL_CONTROLLER_BUTTON_Y:
                     {
+                        Mix_PlayChannel(-1, select_button_sound, 0);
                         if (start_button.selected)
                             start_game();
                         else if (quit_button.selected)

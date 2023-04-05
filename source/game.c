@@ -42,6 +42,7 @@ extern player_t right_player;
 extern Mix_Chunk* hit_paddle_sound;
 extern Mix_Chunk* hit_wall_sound;
 extern Mix_Chunk* applause_sound;
+extern Mix_Chunk* select_button_sound;
 
 
 extern int window_width;
@@ -572,6 +573,8 @@ int on_ball_serve()
         set_ball_direction(&ball, PI + angle);
     }
 
+    Mix_PlayChannel(-1, hit_paddle_sound, 0);
+
     ball_served = true;
 
 
@@ -674,6 +677,7 @@ bool overlay_input()
                 {
                     if (selected_button_idx != 0)
                     {
+                        Mix_PlayChannel(-1, select_button_sound, 0);
                         pause_buttons[selected_button_idx].selected = false;
                         selected_button_idx--;
                         pause_buttons[selected_button_idx].selected = true;
@@ -686,6 +690,7 @@ bool overlay_input()
                 {
                     if (selected_button_idx != NUM_PAUSE_BUTTONS - 1)
                     {
+                        Mix_PlayChannel(-1, select_button_sound, 0);
                         pause_buttons[selected_button_idx].selected= false;
                         selected_button_idx++;
                         pause_buttons[selected_button_idx].selected = true;
@@ -696,6 +701,7 @@ bool overlay_input()
 
                 case SDL_SCANCODE_RETURN:
                 {
+                    Mix_PlayChannel(-1, select_button_sound, 0);
                     switch(selected_button_idx)
                     {
                         case 0: // resume
@@ -746,6 +752,7 @@ bool overlay_input()
                     {
                         if (selected_button_idx != 0)
                         {
+                            Mix_PlayChannel(-1, select_button_sound, 0);
                             pause_buttons[selected_button_idx].selected = false;
                             selected_button_idx--;
                             pause_buttons[selected_button_idx].selected = true;
@@ -760,6 +767,7 @@ bool overlay_input()
                     {
                         if (selected_button_idx != NUM_PAUSE_BUTTONS - 1)
                         {
+                            Mix_PlayChannel(-1, select_button_sound, 0);
                             pause_buttons[selected_button_idx].selected= false;
                             selected_button_idx++;
                             pause_buttons[selected_button_idx].selected = true;
@@ -773,6 +781,7 @@ bool overlay_input()
                     case SDL_CONTROLLER_BUTTON_X:
                     case SDL_CONTROLLER_BUTTON_Y:
                     {
+                        Mix_PlayChannel(-1, select_button_sound, 0);
                         switch(selected_button_idx)
                         {
                             case 0: // resume
@@ -818,6 +827,7 @@ bool overlay_input()
 
 int pause_overlay()
 {
+    Mix_PlayChannel(-1, select_button_sound, 0);
     double padding = window_height / 15.0;
 
     pause_buttons[1].rect.h = window_height / 6.0;
@@ -908,6 +918,7 @@ int win_overlay_input()
                 {
                     if (selected_button_idx != 0)
                     {
+                        Mix_PlayChannel(-1, select_button_sound, 0);
                         win_buttons[selected_button_idx].selected = false;
                         selected_button_idx--;
                         win_buttons[selected_button_idx].selected = true;
@@ -920,6 +931,7 @@ int win_overlay_input()
                 {
                     if (selected_button_idx != NUM_WIN_BUTTONS - 1)
                     {
+                        Mix_PlayChannel(-1, select_button_sound, 0);
                         win_buttons[selected_button_idx].selected= false;
                         selected_button_idx++;
                         win_buttons[selected_button_idx].selected = true;
@@ -930,6 +942,7 @@ int win_overlay_input()
 
                 case SDL_SCANCODE_RETURN:
                 {
+                    Mix_PlayChannel(-1, select_button_sound, 0);
                     switch(selected_button_idx)
                     {
                         case 0: // restart

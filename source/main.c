@@ -18,6 +18,7 @@ SDL_Renderer* renderer;
 Mix_Chunk* hit_paddle_sound;
 Mix_Chunk* hit_wall_sound;
 Mix_Chunk* applause_sound;
+Mix_Chunk* select_button_sound;
 
 SDL_GameController* left_gamepad = NULL;
 SDL_GameController* right_gamepad = NULL;
@@ -74,7 +75,7 @@ int main()
     hit_paddle_sound = Mix_LoadWAV("assets/paddle_sound.wav");
     hit_wall_sound = Mix_LoadWAV("assets/wall_sound.wav");
     applause_sound = Mix_LoadWAV("assets/applause.wav");
-
+    select_button_sound = Mix_LoadWAV("assets/button_select_sound.wav");
 
     main_font = TTF_OpenFont("assets/prstart.ttf", 25);
     if (main_font == NULL)
@@ -122,6 +123,7 @@ int main()
     Mix_FreeChunk(hit_wall_sound);
     Mix_FreeChunk(hit_paddle_sound);
     Mix_FreeChunk(applause_sound);
+    Mix_FreeChunk(select_button_sound);
 
     Mix_CloseAudio();
 
