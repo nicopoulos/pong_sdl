@@ -20,8 +20,6 @@ Mix_Chunk* hit_wall_sound;
 Mix_Chunk* applause_sound;
 Mix_Chunk* select_button_sound;
 
-SDL_GameController* left_gamepad = NULL;
-SDL_GameController* right_gamepad = NULL;
 
 // players
 player_t left_player;
@@ -113,11 +111,8 @@ int main()
 
 
     // Clean up
-
-    SDL_GameControllerClose(left_gamepad);
-    left_gamepad = NULL;
-    SDL_GameControllerClose(right_gamepad);
-    right_gamepad = NULL;
+    SDL_GameControllerClose(right_player.gamepad);
+    SDL_GameControllerClose(left_player.gamepad);
 
 
     Mix_FreeChunk(hit_wall_sound);

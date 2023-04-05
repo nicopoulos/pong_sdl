@@ -145,35 +145,9 @@ bool home_input()
             break;
         }
 
-        /*
-        {
-            if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY && event.caxis.which == SDL_GameControllerGetPlayerIndex(left_gamepad))
-            {
-                int axis_value = event.caxis.value;
-                if (axis_value <= - JOYSTICK_DEADZONE)
-                {
-                    start_button.selected = true;
-                    quit_button.selected = false;
-                }
-                else if (axis_value >= JOYSTICK_DEADZONE)
-                {
-                    quit_button.selected = true;
-                    start_button.selected = false;
-
-                }
-            }
-
-            break;
-        }
-        */ 
     }
 
     return rerender_necessary;
-}
-
-int update_home()
-{
-    return 0;
 }
 
 int render_home()
