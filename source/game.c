@@ -1,12 +1,13 @@
 #include "game.h"
 #include "elements.h"
 #include "constants.h"
-#include "audio.h"
 
 #include <stdbool.h>
 #include <math.h>
 #include <time.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
+
 
 // constants
 #define SCORE_TO_WIN 11
@@ -38,8 +39,10 @@ extern SDL_Renderer* renderer;
 extern player_t left_player;
 extern player_t right_player;
 
-// extern SDL_GameController* left_gamepad;
-// extern SDL_GameController* right_gamepad;
+extern Mix_Chunk* hit_paddle_sound;
+extern Mix_Chunk* hit_wall_sound;
+extern Mix_Chunk* applause_sound;
+
 
 extern int window_width;
 extern int window_height;
@@ -428,76 +431,83 @@ int update_game()
 
 
     // collisiondetection
+    if (ball_served)
+    {
+        // left paddle with walls
+        if (left_player.paddle.pos_y <= 0)
+            left_player.paddle.pos_y = 0;
+        else if (left_player.paddle.pos_y >= window_height_units - left_player.paddle.height)
+            left_player.paddle.pos_y = window_height_units - left_player.paddle.height;
+        
+        // right paddle with walls
+        if (right_player.paddle.pos_y <= 0)
+            right_player.paddle.pos_y = 0;
+        else if (right_player.paddle.pos_y >= window_height_units - right_player.paddle.height)
+            right_player.paddle.pos_y = window_height_units - right_player.paddle.height;
 
-    // left paddle with walls
-    if (left_player.paddle.pos_y <= 0)
-        left_player.paddle.pos_y = 0;
-    else if (left_player.paddle.pos_y >= window_height_units - left_player.paddle.height)
-        left_player.paddle.pos_y = window_height_units - left_player.paddle.height;
-    
-    // right paddle with walls
-    if (right_player.paddle.pos_y <= 0)
-        right_player.paddle.pos_y = 0;
-    else if (right_player.paddle.pos_y >= window_height_units - right_player.paddle.height)
-        right_player.paddle.pos_y = window_height_units - right_player.paddle.height;
+        // ball top wall
+        if (ball.pos_y <= 0)
+        {
+            ball.velocity_y *= -1;
+            ball.pos_y = 0;
+            Mix_PlayChannel(-1, hit_wall_sound, 0);
+        }
+        // ball with bottom wall
+        else if (ball.pos_y + ball.size >= window_height_units)
+        {
+            ball.velocity_y *= -1;
+            ball.pos_y = window_height_units - ball.size;
+            Mix_PlayChannel(-1, hit_wall_sound, 0);
+        }
 
-    // ball top wall
-    if (ball.pos_y <= 0)
-    {
-        ball.velocity_y *= -1;
-        ball.pos_y = 0;
-    }
-    // ball with bottom wall
-    else if (ball.pos_y + ball.size >= window_height_units)
-    {
-        ball.velocity_y *= -1;
-        ball.pos_y = window_height_units - ball.size;
-    }
+        double tolerance = (double)ball.size; // should be higher, the faster the ball
+        // ball with left paddle
+        if ((ball.pos_y + ball.size > left_player.paddle.pos_y && ball.pos_y < left_player.paddle.pos_y + left_player.paddle.height) && ball.pos_x <= left_player.paddle.pos_x + left_player.paddle.width && ball.pos_x >= left_player.paddle.pos_x + left_player.paddle.width - tolerance)
+        {
+            // depending on position on the paddle, the ball should move with a different angle
+            double paddle_center_y = left_player.paddle.pos_y + (left_player.paddle.height / 2.0);
+            double ball_center_y = ball.pos_y + (ball.size / 2.0);
+            double offset = ball_center_y - paddle_center_y;
+            double bounce_off_factor = offset / (left_player.paddle.height / 2.0);
+            if (bounce_off_factor > 1)
+                bounce_off_factor = 1;
+            double bounce_off_angle = bounce_off_factor * MAX_BOUNCE_OFF_ANGLE;
+            set_ball_direction(&ball, bounce_off_angle);
 
-    double tolerance = (double)ball.size; // should be higher, the faster the ball
-    // ball with left paddle
-    if ((ball.pos_y + ball.size > left_player.paddle.pos_y && ball.pos_y < left_player.paddle.pos_y + left_player.paddle.height) && ball.pos_x <= left_player.paddle.pos_x + left_player.paddle.width && ball.pos_x >= left_player.paddle.pos_x + left_player.paddle.width - tolerance)
-    {
-        // depending on position on the paddle, the ball should move with a different angle
-        double paddle_center_y = left_player.paddle.pos_y + (left_player.paddle.height / 2.0);
-        double ball_center_y = ball.pos_y + (ball.size / 2.0);
-        double offset = ball_center_y - paddle_center_y;
-        double bounce_off_factor = offset / (left_player.paddle.height / 2.0);
-        if (bounce_off_factor > 1)
-            bounce_off_factor = 1;
-        double bounce_off_angle = bounce_off_factor * MAX_BOUNCE_OFF_ANGLE;
-        set_ball_direction(&ball, bounce_off_angle);
-    }
-    // ball with right paddle
-    else if ((ball.pos_y + ball.size > right_player.paddle.pos_y && ball.pos_y < right_player.paddle.pos_y + right_player.paddle.height) && (ball.pos_x + ball.size >= right_player.paddle.pos_x && ball.pos_x + ball.size <= right_player.paddle.pos_x + tolerance))
-    {
-        double paddle_center_y = right_player.paddle.pos_y + (right_player.paddle.height / 2.0);
-        double ball_center_y = ball.pos_y + (ball.size / 2.0);
-        double offset = ball_center_y - paddle_center_y;
-        double bounce_off_factor = offset / (right_player.paddle.height / 2.0);
-        if (bounce_off_factor > 1)
-            bounce_off_factor = 1;
-        double bounce_off_angle = PI - (bounce_off_factor * MAX_BOUNCE_OFF_ANGLE);
-        set_ball_direction(&ball, bounce_off_angle);
-    }
+            Mix_PlayChannel(-1, hit_paddle_sound, 0);
+        }
+        // ball with right paddle
+        else if ((ball.pos_y + ball.size > right_player.paddle.pos_y && ball.pos_y < right_player.paddle.pos_y + right_player.paddle.height) && (ball.pos_x + ball.size >= right_player.paddle.pos_x && ball.pos_x + ball.size <= right_player.paddle.pos_x + tolerance))
+        {
+            double paddle_center_y = right_player.paddle.pos_y + (right_player.paddle.height / 2.0);
+            double ball_center_y = ball.pos_y + (ball.size / 2.0);
+            double offset = ball_center_y - paddle_center_y;
+            double bounce_off_factor = offset / (right_player.paddle.height / 2.0);
+            if (bounce_off_factor > 1)
+                bounce_off_factor = 1;
+            double bounce_off_angle = PI - (bounce_off_factor * MAX_BOUNCE_OFF_ANGLE);
+            set_ball_direction(&ball, bounce_off_angle);
 
-    // ball with left "wall"
-    if (ball.pos_x <= 0)
-    {
-        right_player.score.count++;
-        snprintf(right_player.score.string, 10, "%lu", right_player.score.count);
-        right_player.score.length = strlen(right_player.score.string);
-        match_ongoing = false;
-    }
-    // ball with right "wall"
-    else if (ball.pos_x + ball.size >= window_width_units)
-    {
-        left_player.score.count++;
-        snprintf(left_player.score.string, 10, "%lu", left_player.score.count);
-        left_player.score.length = strlen(left_player.score.string);
-        match_ongoing = false;
-    }
+            Mix_PlayChannel(-1, hit_paddle_sound, 0);
+        }
 
+        // ball with left "wall"
+        if (ball.pos_x <= 0)
+        {
+            right_player.score.count++;
+            snprintf(right_player.score.string, 10, "%lu", right_player.score.count);
+            right_player.score.length = strlen(right_player.score.string);
+            match_ongoing = false;
+        }
+        // ball with right "wall"
+        else if (ball.pos_x + ball.size >= window_width_units)
+        {
+            left_player.score.count++;
+            snprintf(left_player.score.string, 10, "%lu", left_player.score.count);
+            left_player.score.length = strlen(left_player.score.string);
+            match_ongoing = false;
+        }
+    }
 
 
     return 0;
@@ -1048,7 +1058,7 @@ int render_win_overlay()
 
 int win_overlay(int winner)
 {
-    play_wav("assets/applause.wav");
+    Mix_PlayChannel(-1, applause_sound, 0);
     
     double padding = window_height / 20.0;
     // buttons

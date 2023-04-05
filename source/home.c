@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "home.h"
 #include "elements.h"
@@ -15,8 +16,9 @@ extern SDL_Renderer* renderer;
 extern player_t left_player;
 extern player_t right_player;
 
-extern SDL_GameController* left_gamepad;
-extern SDL_GameController* right_gamepad;
+extern Mix_Chunk* hit_paddle_sound;
+extern Mix_Chunk* hit_wall_sound;
+extern Mix_Chunk* applause_sound;
 
 extern int window_width;
 extern int window_height;
