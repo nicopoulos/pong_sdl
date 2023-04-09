@@ -12,6 +12,8 @@
 #include "home.h"
 #include "game.h"
 
+#include "controller_thread.h"
+
 SDL_Window* screen;
 SDL_Renderer* renderer;
 
@@ -31,6 +33,9 @@ int window_height;
 double unit;
 
 TTF_Font* main_font;
+
+// controllers
+extern bool refresh_controllers_bool;
 
 int main()
 {
@@ -86,8 +91,8 @@ int main()
 
 
     // initialize controllers
-    left_player.gamepad = NULL;
-    right_player.gamepad = NULL;
+
+    /*
     for (int i = 0; i < SDL_NumJoysticks(); i++)
     {
         if (SDL_IsGameController(i))
@@ -102,17 +107,21 @@ int main()
             }
         }
     }
+    */
+    // SDL_Thread* controller_refresh_thread = SDL_CreateThread(refresh_controllers_func, "controller refresh", NULL); 
 
 
     // Menu
     home();
 
+    refresh_controllers_bool = false;
+    // SDL_WaitThread(controller_refresh_thread, NULL);
     // Game loop
 
 
     // Clean up
-    SDL_GameControllerClose(right_player.gamepad);
-    SDL_GameControllerClose(left_player.gamepad);
+    // SDL_GameControllerClose(right_player.gamepad);
+    // SDL_GameControllerClose(left_player.gamepad);
 
 
     Mix_FreeChunk(hit_wall_sound);

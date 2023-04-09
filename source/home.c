@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <SDL2/SDL_mixer.h>
 
 #include "home.h"
@@ -99,9 +100,12 @@ bool home_input()
             break;
         }
 
+
+
         case SDL_CONTROLLERBUTTONDOWN:
         {
-            if (event.cbutton.which == SDL_GameControllerGetPlayerIndex(left_player.gamepad))
+            printf("controller button down\n");
+            if (event.cbutton.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
             {
                 switch(event.cbutton.button)
                 {
@@ -145,6 +149,34 @@ bool home_input()
             break;
         }
 
+        case SDL_CONTROLLERDEVICEREMOVED:
+        {
+            if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
+            {
+                SDL_GameControllerClose(left_player.gamepad);
+            }
+            else if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)))
+            {
+                SDL_GameControllerClose(right_player.gamepad);
+            }
+
+            break;
+        }
+        case SDL_CONTROLLERDEVICEADDED:
+        {
+            if (SDL_GameControllerGetAttached(left_player.gamepad) == SDL_FALSE)
+            {
+                left_player.gamepad = SDL_GameControllerOpen(0);
+            }
+            if (SDL_GameControllerGetAttached(right_player.gamepad) == SDL_FALSE)
+            {
+                right_player.gamepad = SDL_GameControllerOpen(1);
+            }
+            printf("left_gamepad: %p, %d\n", left_player.gamepad, SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)));
+            printf("right_gamepad: %p, %d\n", right_player.gamepad, SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)));
+
+            break;
+        }
     }
 
     return rerender_necessary;
