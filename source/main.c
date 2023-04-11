@@ -12,7 +12,6 @@
 #include "home.h"
 #include "game.h"
 
-#include "controller_thread.h"
 
 SDL_Window* screen;
 SDL_Renderer* renderer;
@@ -35,7 +34,6 @@ double unit;
 TTF_Font* main_font;
 
 // controllers
-extern bool refresh_controllers_bool;
 
 int main()
 {
@@ -114,7 +112,6 @@ int main()
     // Menu
     home();
 
-    refresh_controllers_bool = false;
     // SDL_WaitThread(controller_refresh_thread, NULL);
     // Game loop
 

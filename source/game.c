@@ -1,6 +1,7 @@
 #include "game.h"
 #include "elements.h"
 #include "constants.h"
+#include "controller_handler.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -238,7 +239,7 @@ int game_input()
                 break;
             case SDL_CONTROLLERBUTTONDOWN:
             {
-                if (event.cbutton.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
+                if (SDL_GameControllerFromInstanceID(event.cbutton.which) == left_player.gamepad)
                 {
 
                     switch(event.cbutton.button)
@@ -278,7 +279,7 @@ int game_input()
                             break;
                     }
                 }
-                else if (event.cbutton.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)))
+                else if (SDL_GameControllerFromInstanceID(event.cbutton.which) == right_player.gamepad)
                 {
                     switch(event.cbutton.button)
                     {
@@ -316,7 +317,7 @@ int game_input()
             }
             case SDL_CONTROLLERBUTTONUP:
             {
-                if (event.cbutton.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
+                if (SDL_GameControllerFromInstanceID(event.cbutton.which) == left_player.gamepad)
                 {
                     switch(event.cbutton.button)
                     {
@@ -331,7 +332,7 @@ int game_input()
                             break;
                     }
                 }
-                else if (event.cbutton.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)))
+                else if (SDL_GameControllerFromInstanceID(event.cbutton.which) == right_player.gamepad)
                 {
                     switch(event.cbutton.button)
                     {
@@ -354,12 +355,12 @@ int game_input()
             {
                 if (event.caxis.axis == SDL_CONTROLLER_AXIS_LEFTY)
                 {
-                    if (event.caxis.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
+                    if (SDL_GameControllerFromInstanceID(event.caxis.which) == left_player.gamepad)
                     {
                         int axis_val = event.caxis.value;
-                        if (axis_val <= -JOYSTICK_DEADZONE || axis_val >= JOYSTICK_DEADZONE)
+                        if (axis_val < -JOYSTICK_DEADZONE || axis_val > JOYSTICK_DEADZONE)
                         {
-                            left_player.paddle.movement = (double)axis_val / 32767.0;
+                            left_player.paddle.movement = (double)axis_val / 32768.0;
                         }
                         else
                         {
@@ -367,12 +368,12 @@ int game_input()
                         }
 
                     }
-                    else if (event.caxis.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)))
+                    else if (SDL_GameControllerFromInstanceID(event.caxis.which) == right_player.gamepad)
                     {
                         int axis_val = event.caxis.value;
-                        if (axis_val <= -JOYSTICK_DEADZONE || axis_val >= JOYSTICK_DEADZONE)
+                        if (axis_val < -JOYSTICK_DEADZONE || axis_val > JOYSTICK_DEADZONE)
                         {
-                            right_player.paddle.movement = (double)axis_val / 32767.0;
+                            right_player.paddle.movement = (double)axis_val / 32768.0;
                         }
                         else
                         {
@@ -388,40 +389,13 @@ int game_input()
             }
             case SDL_CONTROLLERDEVICEREMOVED:
             {
-                printf("controller removed\n");
-                printf("device: %d\n", event.cdevice.which);
-                printf("left_gamepad: %d\n", SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)));
-                printf("right_gamepad: %d\n", SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)));
-                if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
-                {
-                    printf("left gamepad removed\n");
-                    SDL_GameControllerClose(left_player.gamepad);
-                }
-                else if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)))
-                {
-                    printf("right gamepad removed\n");
-                    SDL_GameControllerClose(right_player.gamepad);
-                }
+                on_controller_removed(event.cdevice.which);
 
                 break;
             }
             case SDL_CONTROLLERDEVICEADDED:
             {
-                printf("controller added\n");
-                printf("left gamepad attached: %d\n", SDL_GameControllerGetAttached(left_player.gamepad));
-                printf("right gamepad attached: %d\n", SDL_GameControllerGetAttached(right_player.gamepad));
-                if (SDL_GameControllerGetAttached(left_player.gamepad) == SDL_FALSE)
-                {
-                    printf("left gamepad added\n");
-                    left_player.gamepad = SDL_GameControllerOpen(0);
-                }
-                else if (SDL_GameControllerGetAttached(right_player.gamepad) == SDL_FALSE)
-                {
-                    printf("right gamepad added\n");
-                    right_player.gamepad = SDL_GameControllerOpen(1);
-                }
-                printf("left gamepad attached: %d\n", SDL_GameControllerGetAttached(left_player.gamepad));
-                printf("right gamepad attached: %d\n", SDL_GameControllerGetAttached(right_player.gamepad));
+                on_controller_added(event.cdevice.which);
 
                 break;
             }
@@ -509,7 +483,7 @@ int update_game()
             double paddle_center_y = left_player.paddle.pos_y + (left_player.paddle.height / 2.0);
             double ball_center_y = ball.pos_y + (ball.size / 2.0);
             double offset = ball_center_y - paddle_center_y;
-            double bounce_off_factor = offset / (left_player.paddle.height / 2.0);
+            double bounce_off_factor = offset / (left_player.paddle.height + ball.size / 2.0);
             if (bounce_off_factor > 1)
                 bounce_off_factor = 1;
             double bounce_off_angle = bounce_off_factor * MAX_BOUNCE_OFF_ANGLE;
@@ -523,7 +497,7 @@ int update_game()
             double paddle_center_y = right_player.paddle.pos_y + (right_player.paddle.height / 2.0);
             double ball_center_y = ball.pos_y + (ball.size / 2.0);
             double offset = ball_center_y - paddle_center_y;
-            double bounce_off_factor = offset / (right_player.paddle.height / 2.0);
+            double bounce_off_factor = offset / (right_player.paddle.height + ball.size / 2.0);
             if (bounce_off_factor > 1)
                 bounce_off_factor = 1;
             double bounce_off_angle = PI - (bounce_off_factor * MAX_BOUNCE_OFF_ANGLE);
@@ -784,7 +758,7 @@ bool overlay_input()
 
         case SDL_CONTROLLERBUTTONDOWN:
         {
-            if (event.cbutton.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
+            if (SDL_GameControllerFromInstanceID(event.cbutton.which) == left_player.gamepad)
             {
                 switch(event.cbutton.button)
                 {
@@ -862,31 +836,13 @@ bool overlay_input()
 
         case SDL_CONTROLLERDEVICEREMOVED:
         {
-            if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
-            {
-                printf("left gamepad removed\n");
-                SDL_GameControllerClose(left_player.gamepad);
-            }
-            else if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)))
-            {
-                printf("right gamepad removed\n");
-                SDL_GameControllerClose(right_player.gamepad);
-            }
+            on_controller_removed(event.cdevice.which);
 
             break;
         }
         case SDL_CONTROLLERDEVICEADDED:
         {
-            if (SDL_GameControllerGetAttached(left_player.gamepad) == SDL_FALSE)
-            {
-                printf("left gamepad added\n");
-                left_player.gamepad = SDL_GameControllerOpen(0);
-            }
-            if (SDL_GameControllerGetAttached(right_player.gamepad) == SDL_FALSE)
-            {
-                printf("right gamepad added\n");
-                right_player.gamepad = SDL_GameControllerOpen(1);
-            }
+            on_controller_added(event.cdevice.which);
 
             break;
         }
@@ -1053,7 +1009,7 @@ int win_overlay_input()
 
         case SDL_CONTROLLERBUTTONDOWN:
         {
-            if (event.cbutton.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
+            if (SDL_GameControllerFromInstanceID(event.cbutton.which) == left_player.gamepad)
             {
                 switch(event.cbutton.button)
                 {
@@ -1122,27 +1078,13 @@ int win_overlay_input()
 
         case SDL_CONTROLLERDEVICEREMOVED:
         {
-            if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
-            {
-                SDL_GameControllerClose(left_player.gamepad);
-            }
-            else if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)))
-            {
-                SDL_GameControllerClose(right_player.gamepad);
-            }
+            on_controller_removed(event.cdevice.which);
 
             break;
         }
         case SDL_CONTROLLERDEVICEADDED:
         {
-            if (SDL_GameControllerGetAttached(left_player.gamepad) == SDL_FALSE)
-            {
-                left_player.gamepad = SDL_GameControllerOpen(0);
-            }
-            if (SDL_GameControllerGetAttached(right_player.gamepad) == SDL_FALSE)
-            {
-                right_player.gamepad = SDL_GameControllerOpen(1);
-            }
+            on_controller_added(event.cdevice.which);
 
             break;
         }

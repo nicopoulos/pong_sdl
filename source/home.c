@@ -5,7 +5,7 @@
 #include "home.h"
 #include "elements.h"
 #include "game.h"
-
+#include "controller_handler.h"
 
 // constants
 #define JOYSTICK_DEADZONE 8000
@@ -104,8 +104,7 @@ bool home_input()
 
         case SDL_CONTROLLERBUTTONDOWN:
         {
-            printf("controller button down\n");
-            if (event.cbutton.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
+            if (SDL_GameControllerFromInstanceID(event.cbutton.which) == left_player.gamepad)
             {
                 switch(event.cbutton.button)
                 {
@@ -151,29 +150,13 @@ bool home_input()
 
         case SDL_CONTROLLERDEVICEREMOVED:
         {
-            if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)))
-            {
-                SDL_GameControllerClose(left_player.gamepad);
-            }
-            else if (event.cdevice.which == SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)))
-            {
-                SDL_GameControllerClose(right_player.gamepad);
-            }
+            on_controller_removed(event.cdevice.which);
 
             break;
         }
         case SDL_CONTROLLERDEVICEADDED:
         {
-            if (SDL_GameControllerGetAttached(left_player.gamepad) == SDL_FALSE)
-            {
-                left_player.gamepad = SDL_GameControllerOpen(0);
-            }
-            if (SDL_GameControllerGetAttached(right_player.gamepad) == SDL_FALSE)
-            {
-                right_player.gamepad = SDL_GameControllerOpen(1);
-            }
-            printf("left_gamepad: %p, %d\n", left_player.gamepad, SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(left_player.gamepad)));
-            printf("right_gamepad: %p, %d\n", right_player.gamepad, SDL_JoystickGetDeviceInstanceID(SDL_GameControllerGetPlayerIndex(right_player.gamepad)));
+            on_controller_added(event.cdevice.which);
 
             break;
         }

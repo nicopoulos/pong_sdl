@@ -41,7 +41,6 @@ typedef struct paddle_t
     double pos_y;
     double movement;
 
-
 } paddle_t;
 
 typedef struct player_t
